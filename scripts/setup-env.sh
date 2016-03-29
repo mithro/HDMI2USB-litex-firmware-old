@@ -126,4 +126,11 @@ echo ""
 
 alias python=python3
 
+UNRANDOM_PRELOAD=$THIRD_DIR/unrandom/libunrandom.so
+if [ ! -f $UNRANDOM_PRELOAD ]; then
+	echo "unrandom LD_PRELOAD missing! ($UNRANDOM_PRELOAD)"
+	return 1
+fi
+export LD_PRELOAD=$UNRANDOM_PRELOAD
+
 export HDMI2USB_ENV=1
