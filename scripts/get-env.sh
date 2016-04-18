@@ -6,10 +6,7 @@ CALLED=$_
 SETUP_SRC=$(realpath ${BASH_SOURCE[0]})
 SETUP_DIR=$(dirname $SETUP_SRC)
 TOP_DIR=$(realpath $SETUP_DIR/..)
-BUILD_DIR=$TOP_DIR/build
-THIRD_DIR=$TOP_DIR/third_party
 
-set -e
 
 if [ $SOURCED = 1 ]; then
 	echo "You must run this script, rather then try to source it."
@@ -17,10 +14,15 @@ if [ $SOURCED = 1 ]; then
 	return
 fi
 
+set -e
+
+. $SETUP_DIR/settings.sh
+
 echo "             This script is: $SETUP_SRC"
 echo "         Firmware directory: $TOP_DIR"
 echo "         Build directory is: $BUILD_DIR"
 echo "     3rd party directory is: $THIRD_DIR"
+echo "     Targeting architecture: $ARCH"
 
 # Check the build dir
 if [ ! -d $BUILD_DIR ]; then
@@ -119,7 +121,6 @@ function check_import {
 echo ""
 echo "Install modules from conda"
 echo "---------------------------"
-CONDA_DIR=$BUILD_DIR/conda
 export PATH=$CONDA_DIR/bin:$PATH
 (
 	if [ ! -d $CONDA_DIR ]; then
@@ -135,15 +136,22 @@ export PATH=$CONDA_DIR/bin:$PATH
 
 # binutils for the target
 (
-	conda install binutils-lm32-elf
+	conda install binutils-$ARCH-elf=$BINUTILS_VERSION
 )
-check_version lm32-elf-ld 2.25.1
+check_version $ARCH-elf-ld $BINUTILS_VERSION
 
 # gcc+binutils for the target
 (
-	conda install gcc-lm32-elf
+	conda install gcc-$ARCH-elf=$GCC_VERSION
 )
-check_version lm32-elf-gcc 4.9.3
+check_version $ARCH-elf-gcc $GCC_VERSION
+
+# openocd for programming via Cypress FX2
+(
+	conda install openocd
+)
+check_version openocd 0.10.0-dev
+
 
 # asyncserial
 (
@@ -161,22 +169,6 @@ echo "-----------------------"
 		git submodule update --recursive --init
 )
 
-# migen
-MIGEN_DIR=$THIRD_DIR/migen
-(
-	cd $MIGEN_DIR
-	python setup.py develop
-)
-check_import migen
-
-# misoc
-MISOC_DIR=$THIRD_DIR/misoc
-(
-	cd $MISOC_DIR
-	python setup.py develop
-)
-check_import misoc
-
 # litex
 LITEX_DIR=$THIRD_DIR/litex
 (
@@ -184,6 +176,14 @@ LITEX_DIR=$THIRD_DIR/litex
 	python setup.py develop
 )
 check_import litex
+
+# liteeth
+LITEETH_DIR=$THIRD_DIR/liteeth
+(
+	cd $LITEETH_DIR
+	python setup.py develop
+)
+check_import liteeth
 
 echo "-----------------------"
 echo ""

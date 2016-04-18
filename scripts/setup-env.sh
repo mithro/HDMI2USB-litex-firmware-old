@@ -1,13 +1,17 @@
 #!/bin/bash
 
+if [ "`whoami`" = "root" ]
+then
+    echo "Running the script as root is not permitted"
+    exit 1
+fi
+
 CALLED=$_
 [[ "${BASH_SOURCE[0]}" != "${0}" ]] && SOURCED=1 || SOURCED=0
 
 SETUP_SRC=$(realpath ${BASH_SOURCE[0]})
 SETUP_DIR=$(dirname $SETUP_SRC)
 TOP_DIR=$(realpath $SETUP_DIR/..)
-BUILD_DIR=$TOP_DIR/build
-THIRD_DIR=$TOP_DIR/third_party
 
 if [ $SOURCED = 0 ]; then
 	echo "You must source this script, rather then try and run it."
@@ -26,10 +30,13 @@ if [ ! -z $SETTINGS_FILE ]; then
   return
 fi
 
+. $SETUP_DIR/settings.sh
+
 echo "             This script is: $SETUP_SRC"
 echo "         Firmware directory: $TOP_DIR"
 echo "         Build directory is: $BUILD_DIR"
 echo "     3rd party directory is: $THIRD_DIR"
+echo "     Targeting architecture: $ARCH"
 
 # Check the build dir
 if [ ! -d $BUILD_DIR ]; then
@@ -82,36 +89,23 @@ function check_import {
 echo ""
 echo "Checking modules from conda"
 echo "---------------------------"
-CONDA_DIR=$BUILD_DIR/conda
 export PATH=$CONDA_DIR/bin:$PATH
 
 # binutils for the target
-check_version lm32-elf-ld 2.25.1 || return 1
+
+
+
+check_version $ARCH-elf-ld $BINUTILS_VERSION || return 1
 
 # gcc+binutils for the target
-check_version lm32-elf-gcc 4.9.3 || return 1
 
 
+
+check_version $ARCH-elf-gcc $GCC_VERSION || return 1
 # git submodules
 echo ""
 echo "Checking git submodules"
 echo "-----------------------"
-
-# migen
-MIGEN_DIR=$THIRD_DIR/migen
-
-
-
-
-check_import migen || return 1
-
-# misoc
-MISOC_DIR=$THIRD_DIR/misoc
-
-
-
-
-check_import misoc || return 1
 
 # litex
 LITEX_DIR=$THIRD_DIR/litex
@@ -121,9 +115,41 @@ LITEX_DIR=$THIRD_DIR/litex
 
 check_import litex || return 1
 
+# liteeth
+LITEETH_DIR=$THIRD_DIR/liteeth
+check_import liteeth || return 1
+
+
 echo "-----------------------"
 echo ""
 
 alias python=python3
 
 export HDMI2USB_ENV=1
+
+# Set prompt
+ORIG_PS1="$PS1"
+hdmi2usb_prompt() {
+	P=""
+	if [ ! -z "$ARCH" ]; then
+		P="$P A=$ARCH"
+	fi
+	if [ ! -z "$BOARD" ]; then
+		P="$P B=$BOARD"
+	fi
+	if [ ! -z "$TARGET" ]; then
+		P="$P T=$TARGET"
+	fi
+	if [ ! -z "$PROG" ]; then
+		P="$P P=$PROG"
+	fi
+
+	if [ ! -z "$P" ]; then
+		P="(LS$P) $ORIG_PS1"
+	else
+		P="(LITESOC) $ORIG_PS1"
+	fi
+
+	PS1=$P
+}
+PROMPT_COMMAND=hdmi2usb_prompt
