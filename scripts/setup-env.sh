@@ -34,18 +34,18 @@ fi
 
 echo "             This script is: $SETUP_SRC"
 echo "         Firmware directory: $TOP_DIR"
-echo "         Build directory is: $BUILD_DIR"
+echo "    Tool chain directory is: $TOOLCHAIN_DIR"
 echo "     3rd party directory is: $THIRD_DIR"
 echo "     Targeting architecture: $ARCH"
 
 # Check the build dir
-if [ ! -d $BUILD_DIR ]; then
+if [ ! -d $TOOLCHAIN_DIR ]; then
 	echo "Build directory not found!"
 	return
 fi
 
 # Xilinx ISE
-XILINX_DIR=$BUILD_DIR/Xilinx
+XILINX_DIR=$TOOLCHAIN_DIR/Xilinx
 if [ -f "$XILINX_DIR/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/xreport" ]; then
 	export MISOC_EXTRA_CMDLINE="-Ob ise_path $XILINX_DIR/opt/Xilinx/"
 	# Reserved MAC address from documentation block, see

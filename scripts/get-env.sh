@@ -20,13 +20,13 @@ set -e
 
 echo "             This script is: $SETUP_SRC"
 echo "         Firmware directory: $TOP_DIR"
-echo "         Build directory is: $BUILD_DIR"
+echo "    Tool chain directory is: $TOOLCHAIN_DIR"
 echo "     3rd party directory is: $THIRD_DIR"
 echo "     Targeting architecture: $ARCH"
 
 # Check the build dir
-if [ ! -d $BUILD_DIR ]; then
-	mkdir -p $BUILD_DIR
+if [ ! -d $TOOLCHAIN_DIR ]; then
+	mkdir -p $TOOLCHAIN_DIR
 fi
 
 # Xilinx ISE
@@ -45,10 +45,10 @@ fi
 
 if [ -f $XILINX_PASSPHRASE_FILE ]; then
 	# Need gpg to do the unencryption
-	XILINX_DIR=$BUILD_DIR/Xilinx
+	XILINX_DIR=$TOOLCHAIN_DIR/Xilinx
 	if [ ! -d "$XILINX_DIR" ]; then
 		(
-			cd $BUILD_DIR
+			cd $TOOLCHAIN_DIR
 			mkdir Xilinx
 			cd Xilinx
 
@@ -124,7 +124,7 @@ echo "---------------------------"
 export PATH=$CONDA_DIR/bin:$PATH
 (
 	if [ ! -d $CONDA_DIR ]; then
-		cd $BUILD_DIR
+		cd $TOOLCHAIN_DIR
 		wget -c https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
 		chmod a+x Miniconda3-latest-Linux-x86_64.sh
 	        ./Miniconda3-latest-Linux-x86_64.sh -p $CONDA_DIR -b

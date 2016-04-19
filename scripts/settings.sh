@@ -2,9 +2,9 @@
 
 # Settings for the get-env.sh and setup-env.sh scripts
 
-BUILD_DIR=$TOP_DIR/build
+TOOLCHAIN_DIR=$TOP_DIR/toolchain
 THIRD_DIR=$TOP_DIR/third_party
-CONDA_DIR=$BUILD_DIR/conda
+CONDA_DIR=$TOOLCHAIN_DIR/conda
 
 ARCH=${ARCH:-lm32}
 

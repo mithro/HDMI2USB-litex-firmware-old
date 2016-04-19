@@ -7,6 +7,8 @@ endif
 # Turn off Python's hash randomization
 export PYTHONHASHSEED=0
 
+# Always use GCC
+export CLANG=0
 
 CPU ?= lm32
 
