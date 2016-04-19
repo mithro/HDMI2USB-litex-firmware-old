@@ -10,31 +10,29 @@ export PYTHONHASHSEED=0
 # Always use GCC
 export CLANG=0
 
-CPU ?= $(ARCH)
-
 opsis_minisoc:
 	rm -rf build
-	./opsis_base.py --with-ethernet --nocompile-gateware --cpu-type $(CPU)
+	./opsis_base.py --with-ethernet --nocompile-gateware --cpu-type $(ARCH)
 	cd firmware && make clean all
-	./opsis_base.py --with-ethernet --cpu-type $(CPU)
+	./opsis_base.py --with-ethernet --cpu-type $(ARCH)
 
 opsis_video:
 	rm -rf build
-	./opsis_video.py --nocompile-gateware --cpu-type $(CPU)
+	./opsis_video.py --nocompile-gateware --cpu-type $(ARCH)
 	cd firmware && make clean all
-	./opsis_video.py --cpu-type $(CPU)
+	./opsis_video.py --cpu-type $(ARCH)
 
 opsis_hdmi2usb:
 	rm -rf build
-	./opsis_hdmi2usb.py --nocompile-gateware --cpu-type $(CPU)
+	./opsis_hdmi2usb.py --nocompile-gateware --cpu-type $(ARCH)
 	cd firmware && make clean all
-	./opsis_hdmi2usb.py --cpu-type $(CPU)
+	./opsis_hdmi2usb.py --cpu-type $(ARCH)
 
 opsis_sim:
 	rm -rf build
-	./opsis_sim.py --nocompile-gateware --with-ethernet --cpu-type $(CPU)
+	./opsis_sim.py --nocompile-gateware --with-ethernet --cpu-type $(ARCH)
 	cd firmware && make clean all
-	./opsis_sim.py --with-ethernet --cpu-type $(CPU)
+	./opsis_sim.py --with-ethernet --cpu-type $(ARCH)
 
 load:
 	./load.py
