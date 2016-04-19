@@ -49,7 +49,7 @@ class BaseSoC(SoCSDRAM):
         self.add_constant("ROM_BOOT_ADDRESS", self.mem_map["firmware_ram"])
 
         # sdram
-        sdram_module = IS42S16160(self.clk_freq)
+        sdram_module = IS42S16160(self.clk_freq, "1:1")
         phy_settings = PhySettings(
             memtype="SDR",
             dfi_databits=1*16,
