@@ -99,6 +99,9 @@ class MiniSoC(BaseSoC):
 
 
 def main():
+    import os
+    verbose = bool(int(os.getenv("V", "0")))
+
     parser = argparse.ArgumentParser(description="Generic LiteX SoC Simulation")
     builder_args(parser)
     soc_sdram_args(parser)
@@ -112,7 +115,7 @@ def main():
     builder = Builder(soc, output_dir="build",
                       compile_gateware=not args.nocompile_gateware,
                       csr_csv="test/csr.csv")
-    builder.build()
+    builder.build(verbose=verbose)
 
 
 if __name__ == "__main__":
