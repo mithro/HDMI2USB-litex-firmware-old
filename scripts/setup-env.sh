@@ -102,6 +102,13 @@ check_version $ARCH-elf-ld $BINUTILS_VERSION || return 1
 
 
 check_version $ARCH-elf-gcc $GCC_VERSION || return 1
+
+# openocd for programming via Cypress FX2
+
+
+
+check_version openocd 0.10.0-dev || return 1
+
 # git submodules
 echo ""
 echo "Checking git submodules"
