@@ -185,6 +185,14 @@ LITEETH_DIR=$THIRD_DIR/liteeth
 )
 check_import liteeth
 
+# litevideo
+LITEVIDEO_DIR=$THIRD_DIR/litevideo
+(
+	cd $LITEVIDEO_DIR
+	python setup.py develop
+)
+check_import litevideo
+
 echo "-----------------------"
 echo ""
 echo "Completed.  To load environment:"

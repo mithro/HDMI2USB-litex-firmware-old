@@ -124,8 +124,19 @@ check_import litex || return 1
 
 # liteeth
 LITEETH_DIR=$THIRD_DIR/liteeth
+
+
+
+
 check_import liteeth || return 1
 
+# litevideo
+LITEVIDEO_DIR=$THIRD_DIR/litevideo
+
+
+
+
+check_import litevideo || return 1
 
 echo "-----------------------"
 echo ""
