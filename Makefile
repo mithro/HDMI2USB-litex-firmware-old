@@ -10,7 +10,7 @@ export PYTHONHASHSEED=0
 # Always use GCC
 export CLANG=0
 
-CPU ?= lm32
+CPU ?= $(ARCH)
 
 opsis_minisoc:
 	rm -rf build
