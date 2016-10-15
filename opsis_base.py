@@ -21,7 +21,7 @@ from litex.soc.cores.gpio import GPIOIn, GPIOOut
 from litex.soc.interconnect.csr import AutoCSR
 from litex.soc.cores.uart.bridge import UARTWishboneBridge
 from litex.soc.cores.sdram.lasmicon.core import ControllerSettings
-
+from litex.soc.cores.jtag.wrapper.xilinx.core import JTAG
 
 from liteeth.phy.s6rgmii import LiteEthPHYRGMII
 from liteeth.core.mac import LiteEthMAC
@@ -176,6 +176,7 @@ class BaseSoC(SoCSDRAM):
         SoCSDRAM.__init__(self, platform, clk_freq,
             integrated_rom_size=0x8000,
             integrated_sram_size=0x8000,
+            jtag=JTAG(platform),
             **kwargs)
         self.submodules.crg = _CRG(platform, clk_freq)
         self.submodules.dna = dna.DNA()

@@ -14,7 +14,7 @@ from litex.soc.cores.sdram.settings import PhySettings, IS42S16160
 from litex.soc.cores.sdram.model import SDRAMPHYModel
 from litex.soc.integration.soc_core import mem_decoder
 from litex.soc.cores.sdram.lasmicon.core import ControllerSettings
-
+from litex.soc.cores.jtag.wrapper.verilator.core import JTAG
 
 from liteeth.phy.model import LiteEthPHYModel
 from liteeth.core.mac import LiteEthMAC
@@ -32,12 +32,15 @@ class BaseSoC(SoCSDRAM):
                  firmware_filename="firmware/firmware.bin",
                  **kwargs):
         platform = sim.Platform()
+        jtag = JTAG(platform)
         SoCSDRAM.__init__(self, platform,
             clk_freq=int((1/(platform.default_clk_period))*1000000000),
             integrated_rom_size=0x8000,
             integrated_sram_size=0x8000,
             with_uart=False,
+            jtag=jtag,
             **kwargs)
+        self.submodules.jtag = jtag
         self.submodules.crg = CRG(platform.request(platform.default_clk_name))
 
         self.submodules.uart_phy = uart.RS232PHYModel(platform.request("serial"))
