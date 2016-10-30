@@ -6,7 +6,7 @@
 
 #ifdef ETHMAC_BASE
 
-#define ci_printf(...)					\
+#define wprintf(...)					\
 	do {						\
 		if(telnet_active) {			\
 			telnet_printf(__VA_ARGS__);	\
@@ -14,7 +14,7 @@
 		printf(__VA_ARGS__);			\
 	} while(false)
 
-#define ci_puts(s)					\
+#define wputs(s)					\
 	do {						\
 		if(telnet_active) {			\
 			telnet_puts(s);			\
@@ -22,7 +22,7 @@
 		puts(s);				\
 	} while(false)
 
-#define ci_putsnonl(s)					\
+#define wputsnonl(s)					\
 	do {						\
 		if(telnet_active) {			\
 			telnet_putsnonl(s);		\
@@ -32,8 +32,8 @@
 
 #else
 
-#define ci_printf	printf
-#define ci_puts		puts
-#define ci_putsnonl	putsnonl
+#define wprintf		printf
+#define wputs		puts
+#define wputsnonl	putsnonl
 
 #endif
