@@ -175,7 +175,7 @@ begin
   end process;
 
 
-  p_mux2_data : process(RST)
+  p_mux2_data : process(CLK)
   begin
     if CLK'event and CLK = '1' then
       fifo_data_in <= data_in;

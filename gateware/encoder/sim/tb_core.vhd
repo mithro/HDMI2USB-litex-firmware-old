@@ -1710,6 +1710,13 @@ begin
   begin
     sink_valid     <= '0';
     sink_data      <= X"0000";
+    while true loop
+      wait until rising_edge(sys_clock);
+      sink_valid <= '1';
+      if sink_ready = '1' then
+        sink_data <= std_logic_vector(unsigned(sink_data) + 1);
+      end if;
+    end loop;
     wait;
   end process;
 
