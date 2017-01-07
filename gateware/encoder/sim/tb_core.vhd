@@ -88,7 +88,7 @@ begin
   p_encoder_clock : process
   begin
     while true loop
-      wait for 5 ns;
+      wait for 8 ns;
       encoder_clock <= not encoder_clock;
     end loop;
   end process;
