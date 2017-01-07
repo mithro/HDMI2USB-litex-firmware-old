@@ -1687,7 +1687,7 @@ begin
     wishbone_we    <= '1';
     wishbone_cyc   <= '1';
     wishbone_adr   <= X"00000001";
-    wishbone_dat_w <= X"00400040";
+    wishbone_dat_w <= X"01000100";
     wait until rising_edge(wishbone_ack);
     wishbone_stb   <= '0';
     wishbone_we    <= '0';
@@ -1718,13 +1718,14 @@ begin
     i := 0;
     sink_valid     <= '0';
     sink_data      <= X"0000";
+    wait for 20000 ns;
     while true loop
-      wait until rising_edge(sys_clock);
+      wait until rising_edge(encoder_clock);
       sink_valid <= '1';
       if sink_ready = '1' then
-        if (i mod 128) = 0 then
+        if (i mod 2) = 0 then
            sink_data <= X"8000";
-        elsif (i mod 128) = 64 then
+        elsif (i mod 2) = 1 then
            sink_data <= X"80ff";
         end if;
         i := i + 1;

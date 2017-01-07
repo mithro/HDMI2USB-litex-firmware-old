@@ -135,4 +135,4 @@ def encoder_start(resx, resy):
     encoder_write_reg(ENCODER_START_REG, 7); # RGB, SOF
 
 encoder_init(100)
-encoder_start(64, 64)
+encoder_start(256, 256)
