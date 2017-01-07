@@ -42,6 +42,7 @@ vlog -work work ../verilog/wb_async_reg.v
 
 vlog -work work core.v
 
+vcom -work work pkg_txt_util.vhd
 vcom -work work tb_core.vhd
 
 vsim -t 1ps tb_core

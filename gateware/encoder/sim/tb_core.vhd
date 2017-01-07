@@ -17,6 +17,12 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.std_logic_textio.all;
+
+library STD;
+use STD.textio.all;
+
+use WORK.pkg_txt_util.all;
 
 --******************************************************************************
 --  Entity Declaration Part
@@ -1707,26 +1713,43 @@ begin
   -- Sink
   --=========================================================================--
   p_sink : process
+    variable i: natural;
   begin
+    i := 0;
     sink_valid     <= '0';
     sink_data      <= X"0000";
     while true loop
       wait until rising_edge(sys_clock);
       sink_valid <= '1';
       if sink_ready = '1' then
-        sink_data <= std_logic_vector(unsigned(sink_data) + 1);
+        if (i mod 128) = 0 then
+           sink_data <= X"8000";
+        elsif (i mod 128) = 64 then
+           sink_data <= X"80ff";
+        end if;
+        i := i + 1;
       end if;
     end loop;
     wait;
   end process;
 
   --=========================================================================--
-  -- Source
+  -- Source (Write data to file)
   --=========================================================================--
   p_source : process
+    file file_log   : text;
+    variable v_line : line;
   begin
     source_ready <= '1';
-    wait;
+    wait until rising_edge(encoder_clock) and encoder_reset = '0';
+    file_open(file_log, "tb_core.out", write_mode);
+    while true loop
+      wait until rising_edge(encoder_clock);
+      if source_valid = '1' and source_ready = '1' then
+        HWrite(v_line, source_data);
+        WriteLine(file_log, v_line);
+      end if;
+    end loop;
   end process;
 
 end test;
