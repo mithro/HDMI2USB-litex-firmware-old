@@ -18,7 +18,7 @@ _io = [
 
     ("wishbone", 0,
         Subsignal("stb", Pins(1)),
-        Subsignal("sel", Pins(1)),
+        Subsignal("sel", Pins(4)),
         Subsignal("we",  Pins(1)),
         Subsignal("ack", Pins(1)),
         Subsignal("err", Pins(1)),
