@@ -45,7 +45,8 @@ vlog -work work core.v
 vcom -work work pkg_txt_util.vhd
 vcom -work work tb_core.vhd
 
-vsim -t 1ps tb_core
+vopt tb_core +acc -o tb_core_opt
+vsim -t 1ps tb_core_opt
 
 do wave.do
 

@@ -31,7 +31,7 @@ _io = [
     ("sink", 0,
         Subsignal("valid", Pins(1)),
         Subsignal("ready", Pins(1)),
-        Subsignal("data", Pins(16))
+        Subsignal("data", Pins(128))
     ),
 
     ("source", 0,
@@ -68,8 +68,10 @@ class Core(SoCCore):
             with_timer=False
         )
         # encoder
+        encoder_buffer = ClockDomainsRenamer("encoder")(EncoderBuffer())
         encoder = Encoder(platform)
-        self.submodules += encoder
+        self.comb += encoder_buffer.source.connect(encoder.sink)
+        self.submodules += encoder_buffer, encoder
         
         # wishbone
         wishbone = platform.request("wishbone")
@@ -88,9 +90,9 @@ class Core(SoCCore):
         # sink
         sink = platform.request("sink")
         self.comb += [
-            encoder.sink.valid.eq(sink.valid),
-            encoder.sink.data.eq(sink.data),
-            sink.ready.eq(encoder.sink.ready)
+            encoder_buffer.sink.valid.eq(sink.valid),
+            encoder_buffer.sink.data.eq(sink.data),
+            sink.ready.eq(encoder_buffer.sink.ready)
         ]
 
         # source

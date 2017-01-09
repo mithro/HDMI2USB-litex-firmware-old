@@ -55,7 +55,7 @@ architecture test of tb_core is
 
   signal sink_valid : std_logic;
   signal sink_ready : std_logic;
-  signal sink_data  : std_logic_vector(15 downto 0);
+  signal sink_data  : std_logic_vector(127 downto 0);
 
   signal source_valid : std_logic;
   signal source_ready : std_logic;
@@ -1717,16 +1717,16 @@ begin
   begin
     i := 0;
     sink_valid     <= '0';
-    sink_data      <= X"0000";
+    sink_data      <= X"0000_0000_0000_0000_0000_0000_0000_0000";
     wait for 20000 ns;
     while true loop
       wait until rising_edge(encoder_clock);
       sink_valid <= '1';
       if sink_ready = '1' then
         if (i mod 2) = 0 then
-           sink_data <= X"8000";
+           sink_data <= X"8010_80ff_8010_80ff_8010_80ff_8010_80ff";
         elsif (i mod 2) = 1 then
-           sink_data <= X"80ff";
+           sink_data <= X"8010_80ff_8010_80ff_8010_80ff_8010_80ff";
         end if;
         i := i + 1;
       end if;

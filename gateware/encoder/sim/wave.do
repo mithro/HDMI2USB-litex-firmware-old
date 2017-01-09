@@ -1,6 +1,6 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate -expand -group Testbench
+add wave -noupdate -group Testbench
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/sys_clock
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/sys_reset
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/encoder_clock
@@ -401,8 +401,40 @@ add wave -noupdate -group HuffmanFIFO2 -format Literal -radix hexadecimal /tb_co
 add wave -noupdate -group HuffmanFIFO2 -format Logic -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramenw
 add wave -noupdate -group HuffmanFIFO2 -format Literal -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramraddr
 add wave -noupdate -group HuffmanFIFO2 -format Logic -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramenr
+add wave -noupdate -group EncoderBuffer
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_sink_valid
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_sink_ready
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_sink_payload_data
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_valid
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_ready
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_last
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_source_payload_data
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_adr
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_dat_r
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_port_we
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_dat_w
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_read_port_adr
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_read_port_dat_r
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_sel
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_swap
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_read_sel
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_read_swap
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_write_clr
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_write_inc
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_v_write
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_h_read_clr
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_h_read_inc
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_h_read
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_read_clr
+add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_read_inc
+add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_v_read
+add wave -noupdate -expand -group EncoderSink
+add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_valid
+add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_ready
+add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_last
+add wave -noupdate -group EncoderSink -format Literal -radix hexadecimal /tb_core/core/encoder_sink_sink_payload_data
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {47663536 ps} 0} {{Cursor 9} {40110905311 ps} 0}
+WaveRestoreCursors {{Cursor 1} {47663536 ps} 0} {{Cursor 9} {138949393161 ps} 0}
 configure wave -namecolwidth 380
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -417,4 +449,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {81461441250 ps}
+WaveRestoreZoom {0 ps} {215934867750 ps}
