@@ -159,7 +159,7 @@ void pattern_fill_framebuffer(int h_active, int m_active)
 	flush_l2_cache();
 	color = -1;
 	volatile unsigned int *framebuffer = (unsigned int *)(MAIN_RAM_BASE + PATTERN_FRAMEBUFFER_BASE);
-	if(pattern == COLOR_BAR_PATTERN) {
+	if (pattern == COLOR_BAR_PATTERN) {
 		/* color bar pattern */
 		for(i=0; i<h_active*m_active*2/4; i++) {
 			if(i%(h_active/16) == 0)
@@ -167,14 +167,11 @@ void pattern_fill_framebuffer(int h_active, int m_active)
 			if(color >= 0)
 				framebuffer[i] = color_bar[color];
 		}
-	} else {
+	} else if (pattern == BLACK_WHITE_BAR_PATTERN) {
 		/* vertical black white lines */
 		for(i=0; i<h_active*m_active*2/4; i++) {
-			if(i%(h_active/16) == 0)
-				color = inc_color(color);
-			if(color >= 0)
-				framebuffer[i] = 0x801080ff;
-		}
+			framebuffer[i] = 0x801080ff;
+		}	
 	}
 	pattern_draw_text(1, 1, "HDMI2USB");
 	pattern_draw_text(1, 3, "timvideos.us");

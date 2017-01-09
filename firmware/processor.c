@@ -436,7 +436,7 @@ void processor_init(void)
 		encoder_enable(0);
 		encoder_target_fps = 30;
 #endif
-	pattern = COLOR_BAR_PATTERN;
+	pattern = BLACK_WHITE_BAR_PATTERN;
 }
 
 void processor_start(int mode)
