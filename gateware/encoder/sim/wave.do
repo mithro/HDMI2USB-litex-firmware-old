@@ -1,6 +1,6 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate -group Testbench
+add wave -noupdate -expand -group Testbench
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/sys_clock
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/sys_reset
 add wave -noupdate -group Testbench -format Logic -radix hexadecimal /tb_core/encoder_clock
@@ -401,40 +401,184 @@ add wave -noupdate -group HuffmanFIFO2 -format Literal -radix hexadecimal /tb_co
 add wave -noupdate -group HuffmanFIFO2 -format Logic -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramenw
 add wave -noupdate -group HuffmanFIFO2 -format Literal -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramraddr
 add wave -noupdate -group HuffmanFIFO2 -format Logic -radix hexadecimal /tb_core/core/JpegEnc/u_huffman/u_doublefifo/u_fifo_2/ramenr
-add wave -noupdate -group EncoderBuffer
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_sink_valid
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_sink_ready
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_sink_payload_data
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_valid
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_ready
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_source_last
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_source_payload_data
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_adr
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_dat_r
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_port_we
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_write_port_dat_w
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_read_port_adr
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_read_port_dat_r
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_sel
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_write_swap
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_read_sel
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_read_swap
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_write_clr
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_write_inc
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_v_write
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_h_read_clr
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_h_read_inc
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_h_read
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_read_clr
-add wave -noupdate -group EncoderBuffer -format Logic -radix hexadecimal /tb_core/core/encoder_buffer_v_read_inc
-add wave -noupdate -group EncoderBuffer -format Literal -radix hexadecimal /tb_core/core/encoder_buffer_v_read
-add wave -noupdate -expand -group EncoderSink
+add wave -noupdate -group EncoderSink
 add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_valid
 add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_ready
 add wave -noupdate -group EncoderSink -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_last
 add wave -noupdate -group EncoderSink -format Literal -radix hexadecimal /tb_core/core/encoder_sink_sink_payload_data
+add wave -noupdate -expand -group Core
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sys_clock
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sys_reset
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_clock
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_reset
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/wishbone_stb
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/wishbone_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/wishbone_we
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/wishbone_ack
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/wishbone_err
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/wishbone_cyc
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/wishbone_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/wishbone_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/wishbone_dat_r
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sink_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sink_ready
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sink_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/source_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/source_ready
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/source_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sys_clk
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sys_rst
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_clk
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_rst
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_bus_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_bus_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_bus_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_bus_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sram_bus_cyc
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sram_bus_stb
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sram_bus_ack
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/sram_bus_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/sram_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/interface_adr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/interface_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/interface_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/interface_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/bus_wishbone_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/bus_wishbone_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/bus_wishbone_dat_r
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/bus_wishbone_cyc
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/bus_wishbone_stb
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/bus_wishbone_ack
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/bus_wishbone_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/counter
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_sink_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_sink_ready
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_sink_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_source_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_source_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_source_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_source_payload_data
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_write_port_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_write_port_dat_r
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_write_port_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_write_port_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_read_port_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_read_port_dat_r
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_write_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_write_swap
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_read_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_read_swap
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_v_write_clr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_v_write_inc
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_v_write
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_h_read_clr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_h_read_inc
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_h_read
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_v_read_clr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoderbuffer_v_read_inc
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoderbuffer_v_read
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_sink_sink_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_sink_sink_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_source_source_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_source_source_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_source_source_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_source_source_payload_data
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_bus_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_bus_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_bus_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_bus_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_bus_cyc
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_bus_stb
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_bus_ack
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_bus_we
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_bus_err
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_payload_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_payload_cb_cr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_payload_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_payload_cb
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_payload_cr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_sink_cb_cr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_cb
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_source_cr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_first
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_record0_ycbcr_n_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_record0_ycbcr_n_cb_cr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_record1_ycbcr_n_y
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_record1_ycbcr_n_cb_cr
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_parity
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_ce
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_pipe_ce
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_valid_n0
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_valid_n1
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_last_n0
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_ycbcr422to444_last_n1
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_fdct_fifo_rd
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_fifo_q
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_fdct_fifo_hf_full
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_data_d1
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_data_d2
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_data_d3
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_data_d4
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_fdct_data_d5
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_almost_full
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_sink_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_sink_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_sink_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_sink_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_source_valid
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_source_ready
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_source_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_source_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_we
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_writable
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_re
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_readable
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_din
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_syncfifo_dout
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_level
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_replace
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_produce
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_consume
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_wrport_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_wrport_dat_r
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_wrport_we
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_wrport_dat_w
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_do_read
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_rdport_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_rdport_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_fifo_in_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_fifo_in_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_output_fifo_fifo_out_payload_data
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_output_fifo_fifo_out_last
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_jpeg_bus_adr
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_jpeg_bus_dat_w
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_jpeg_bus_dat_r
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder_jpeg_bus_sel
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_jpeg_bus_cyc
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_jpeg_bus_stb
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_jpeg_bus_ack
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_jpeg_bus_we
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/encoder_jpeg_bus_err
+add wave -noupdate -group Core -format Literal -radix hexadecimal /tb_core/core/encoder
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/fsm0_state
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/fsm0_next_state
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/fsm1_state
+add wave -noupdate -group Core -format Logic -radix hexadecimal /tb_core/core/fsm1_next_state
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {47663536 ps} 0} {{Cursor 9} {138949393161 ps} 0}
+WaveRestoreCursors {{Cursor 1} {1131736337 ps} 0} {{Cursor 9} {1104783044302 ps} 0}
 configure wave -namecolwidth 380
 configure wave -valuecolwidth 100
 configure wave -justifyvalue left
@@ -449,4 +593,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {215934867750 ps}
+WaveRestoreZoom {0 ps} {16018422 ns}
