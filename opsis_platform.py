@@ -95,9 +95,9 @@ _io = [
     ("cpu_reset", 0, Pins("Y3"), IOStandard("LVCMOS15"), Misc("PULLUP")),
 
     # serial
-    ("serial_debug", 0,
-        Subsignal("tx", Pins(_get_tofe_low_speed_io("rx"))),
-        Subsignal("rx", Pins(_get_tofe_low_speed_io("tx"))),
+    ("serial", 0,
+        Subsignal("tx", Pins(_get_tofe_low_speed_pmod3_io(2))),
+        Subsignal("rx", Pins(_get_tofe_low_speed_pmod3_io(4)), Misc("PULLUP")),
         IOStandard("LVCMOS33")
     ),
 
@@ -151,13 +151,6 @@ _io = [
         Subsignal("rx_data", Pins("R9 R8 W6 Y6")),
         Subsignal("tx_ctl", Pins("W8")),
         Subsignal("tx_data", Pins("W9 Y8 AA6 AB6")),
-        IOStandard("LVCMOS33")
-    ),
-
-    # serial
-    ("serial", 0,
-        Subsignal("tx", Pins(_get_tofe_low_speed_pmod3_io(0))),
-        Subsignal("rx", Pins(_get_tofe_low_speed_pmod3_io(1))),
         IOStandard("LVCMOS33")
     ),
 
