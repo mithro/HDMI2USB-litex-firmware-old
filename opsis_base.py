@@ -219,7 +219,7 @@ class MiniSoC(BaseSoC):
         "ethphy",
         "ethmac"
     )
-    csr_map_update(SoCSDRAM.csr_map, csr_peripherals)
+    csr_map_update(BaseSoC.csr_map, csr_peripherals)
 
     interrupt_map = {
         "ethmac": 2,
