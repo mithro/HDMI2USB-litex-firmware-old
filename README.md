@@ -1,12 +1,10 @@
-For project description and information see the project [README.md](/) file.
-
 # Building HDMI2USB-litex-firmware on Ubuntu 14.04 LTS
 
-These scripts are designed to bootstrap a firmware build environment on Ubuntu
-14.04 LTS and also works on 16.04 though with less testing.  This is only
-required if you wish to make changes to the firmware.
-For using a HDMI2USB board, prebuilt versions of the firmware
-are available in the
+The scripts in the `scripts` directory are designed to bootstrap a firmware
+build environment on Ubuntu 14.04 LTS and also works on 16.04 though with
+less testing.  This is only required if you wish to make changes to the
+firmware.  For using a HDMI2USB board, prebuilt versions of the firmware are
+available in the
 [HDMI2USB-firmware-prebuilt](http://github.com/timvideos/HDMI2USB-firmware-prebuilt)
 repository.
 
