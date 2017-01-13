@@ -283,9 +283,6 @@ static void status_short_enable(void)
 {
 	wprintf("Enabling short status\r\n");
 	status_short_enabled = 1;
-#ifdef ENCODER_BASE
-	encoder_bandwidth_nbytes_clear_write(1);
-#endif
 }
 
 static void status_short_disable(void)
@@ -299,58 +296,93 @@ static void debug_ddr(void);
 
 static void status_short_print(void)
 {
+	unsigned int underflows;
 #ifdef CSR_HDMI_IN0_BASE
 	wprintf(
-		"input0: %dx%d, ",
+		"in0: %dx%d ",
 		hdmi_in0_resdetection_hres_read(),
 		hdmi_in0_resdetection_vres_read());
+#ifdef CSR_HDMI_IN0_FREQ_BASE
+	wprintf("(@" REFRESH_RATE_PRINTF "MHz), ",
+		REFRESH_RATE_PRINTF_ARGS(hdmi_in0_freq_value_read() / 10000));
+#endif
 #endif
 
 #ifdef CSR_HDMI_IN1_BASE
 	wprintf(
-		"input1: %dx%d, ",
+		"in1: %dx%d ",
 		hdmi_in1_resdetection_hres_read(),
 		hdmi_in1_resdetection_vres_read());
+#ifdef CSR_HDMI_IN1_FREQ_BASE
+	wprintf("(@" REFRESH_RATE_PRINTF "MHz), ",
+		REFRESH_RATE_PRINTF_ARGS(hdmi_in1_freq_value_read() / 10000));
+#endif
 #endif
 
 #ifdef CSR_HDMI_OUT0_BASE
-	wprintf("output0: ");
-	if(hdmi_out0_core_initiator_enable_read())
+	wprintf("out0: ");
+	if(hdmi_out0_core_initiator_enable_read()) {
+		hdmi_out0_core_underflow_enable_write(1);
+		hdmi_out0_core_underflow_update_write(1);
+		underflows = hdmi_out0_core_underflow_counter_read();
 		wprintf(
-			"%dx%d@%dHz (%s), ",
+			"%dx%d@" REFRESH_RATE_PRINTF "Hz %s (uf:%d), ",
 			processor_h_active,
 			processor_v_active,
-			processor_refresh,
-			processor_get_source_name(processor_hdmi_out0_source));
-	else
+			REFRESH_RATE_PRINTF_ARGS(processor_refresh),
+			processor_get_source_name(processor_hdmi_out0_source),
+			underflows);
+		hdmi_out0_core_underflow_enable_write(0);
+		hdmi_out0_core_underflow_enable_write(1);
+	} else
 		wprintf("off, ");
 #endif
 
 #ifdef CSR_HDMI_OUT1_BASE
-	wprintf("output1: ");
-	if(hdmi_out1_core_initiator_enable_read())
+	wprintf("out1: ");
+	if(hdmi_out1_core_initiator_enable_read()) {
+		hdmi_out1_core_underflow_enable_write(1);
+		hdmi_out1_core_underflow_update_write(1);
+		underflows = hdmi_out1_core_underflow_counter_read();
 		wprintf(
-			"%dx%d@%uHz (%s), ",
+			"%dx%d@" REFRESH_RATE_PRINTF "Hz %s (uf:%d), ",
 			processor_h_active,
 			processor_v_active,
-			processor_refresh,
-			processor_get_source_name(processor_hdmi_out1_source));
-	else
+			REFRESH_RATE_PRINTF_ARGS(processor_refresh),
+			processor_get_source_name(processor_hdmi_out1_source),
+			underflows);
+		hdmi_out1_core_underflow_enable_write(0);
+		hdmi_out1_core_underflow_enable_write(1);
+	} else
 		wprintf("off, ");
 #endif
 
+	wprintf("EDID P: ");
+	wprintf("%dx%d@" REFRESH_RATE_PRINTF "Hz, ",
+		processor_h_active,
+		processor_v_active,
+		REFRESH_RATE_PRINTF_ARGS(processor_refresh));
+
+	wprintf("EDID S: ");
+	if (processor_secondary_mode == EDID_SECONDARY_MODE_OFF) {
+		wprintf("off, ");
+	}
+	else {
+		char mode_descriptor[PROCESSOR_MODE_DESCLEN];
+		processor_describe_mode(mode_descriptor, processor_secondary_mode);
+		wprintf("%s, ", mode_descriptor);
+	}
+
 #ifdef ENCODER_BASE
-	wprintf("encoder: ");
+	wprintf("enc: ");
 	if(encoder_enabled) {
 		wprintf(
-			"%dx%d@%dfps (%dMbps) %s (q:%d), ",
+			"%dx%d@%dfps %s (q:%d), ",
 			processor_h_active,
 			processor_v_active,
 			encoder_fps,
-			encoder_bandwidth_nbytes_read()*8/1000000,
 			processor_get_source_name(processor_encoder_source),
 			encoder_quality);
-		encoder_bandwidth_nbytes_clear_write(1);
 	} else
 		wprintf("off, ");
 #endif
@@ -358,7 +390,6 @@ static void status_short_print(void)
 	wprintf("ddr: ");
 	debug_ddr();
 #endif
-wprintf("\r\n");
 }
 
 static void status_print(void)
