@@ -165,6 +165,7 @@ create_msg(CC_REGISTER_ARG struct dhcp_msg *m)
 static void
 send_discover(void)
 {
+  printf("send_discover...\n");
   uint8_t *end;
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
 
@@ -180,6 +181,7 @@ send_discover(void)
 static void
 send_request(void)
 {
+  printf("send_request...\n");
   uint8_t *end;
   struct dhcp_msg *m = (struct dhcp_msg *)uip_appdata;
 

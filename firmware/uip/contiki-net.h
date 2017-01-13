@@ -55,6 +55,8 @@
 
 #include "net/ip/psock.h"
 
+#include "net/ip/dhcpc.h"
+
 #include "net/ip/udp-socket.h"
 #include "net/ip/tcp-socket.h"
 

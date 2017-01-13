@@ -27,12 +27,17 @@ typedef unsigned int uip_stats_t;
 #endif
 
 /* uIP configuration */
+#define UIP_DEBUG		1
 #define UIP_CONF_BYTE_ORDER	UIP_BIG_ENDIAN
 #define UIP_CONF_LLH_LEN	14
 #define UIP_CONF_BROADCAST	1
 #define UIP_CONF_LOGGING	1
-#define UIP_CONF_BUFFER_SIZE	256
+#define UIP_CONF_BUFFER_SIZE	1536
+#define UIP_CONF_UDP		1
 
 #define UIP_CONF_TCP_FORWARD	1
+
+// Needed for DHCP
+#define UIP_CONF_BROADCAST	1
 
 #endif /* CONTIKI_CONF_H__ */
