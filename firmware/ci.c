@@ -412,7 +412,7 @@ static void status_service(void)
 		}
 		if(status_short_enabled) {
 		    status_short_print();
-        }
+		}
 	}
 }
 
@@ -772,13 +772,13 @@ void ci_service(void)
 		token = get_token(&str);
 		if(strcmp(token, "short") == 0) {
 			token = get_token(&str);
-            if(strcmp(token, "on") == 0)
-                status_short_enable();
-            else if(strcmp(token, "off") == 0)
-                status_short_disable();
-            else
-                status_short_print();
-        }
+			if(strcmp(token, "on") == 0)
+				status_short_enable();
+			else if(strcmp(token, "off") == 0)
+				status_short_disable();
+			else
+				status_short_print();
+		}
 		else if(strcmp(token, "on") == 0)
 			status_enable();
 		else if(strcmp(token, "off") == 0)
@@ -805,8 +805,8 @@ void ci_service(void)
 #ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
 		else if(strcmp(token, "ddr") == 0) {
 			debug_ddr();
-            wprintf("\r\n");
-        }
+			wprintf("\r\n");
+		}
 #endif
 #ifdef CSR_DNA_ID_ADDR
 		else if(strcmp(token, "dna") == 0)
@@ -815,12 +815,12 @@ void ci_service(void)
 #ifdef CSR_OPSIS_EEPROM_I2C_W_ADDR
 		else if(strcmp(token, "opsis_eeprom") == 0) {
 			opsis_eeprom_dump();
-                }
+		}
 #endif
 #ifdef CSR_TOFE_EEPROM_I2C_W_ADDR
 		else if(strcmp(token, "tofe_eeprom") == 0) {
 			tofe_eeprom_dump();
-                }
+		}
 #endif
 #ifdef CSR_FX2_RESET_OUT_ADDR
 		else if(strcmp(token, "fx2_reboot") == 0) {
@@ -836,7 +836,7 @@ void ci_service(void)
 			else {
 				fx2_debug();
 			}
-                }
+		}
 #endif
 		else if(strcmp(token, "edid") == 0) {
 			unsigned int found = 0;
