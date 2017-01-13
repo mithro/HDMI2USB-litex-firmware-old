@@ -250,8 +250,10 @@ loaded file build/opsis_hdmi2usb-hdmi2usbsoc-opsis.bit to pld device 0 in 31s 98
 
 Load fx2 firmware to enable USB capture:
 ```
-make load-fx2
+make firmware-load
 ```
+
+Then at the `BIOS>` prompt, enter `serialboot`.
 
 ### Common Errors
 
