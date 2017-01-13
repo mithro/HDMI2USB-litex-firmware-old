@@ -26,6 +26,7 @@
 #include "version.h"
 
 int status_enabled;
+int status_short_enabled;
 
 static void help_video_matrix(void)
 {
@@ -54,7 +55,9 @@ static void help_status(void)
 {
 	wputs("status commands (alias: 's')");
 	wputs("  status                         - print status message once");
+	wputs("  status short                   - print status (short) message once");
 	wputs("  status <on/off>                - repeatedly print status message");
+	wputs("  status short <on/off>          - repeatedly print (short) status message");
 }
 
 #ifdef CSR_HDMI_OUT0_BASE
@@ -90,6 +93,12 @@ static void help_debug(void)
 {
     wputs("debug commands (alias 'd')");
 	wputs("  debug pll                      - dump pll configuration");
+#ifdef CSR_HDMI_IN0_BASE
+    wputs("  debug input0                   - debug dvisampler0");
+#endif
+#ifdef CSR_HDMI_IN1_BASE
+    wputs("  debug input1                   - debug dvisampler1");
+#endif
 #ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
 	wputs("  debug ddr                      - show DDR bandwidth");
 #endif
@@ -241,7 +250,87 @@ static void status_disable(void)
 	status_enabled = 0;
 }
 
+static void status_short_enable(void)
+{
+	wprintf("Enabling short status\r\n");
+	status_short_enabled = 1;
+#ifdef ENCODER_BASE
+	encoder_bandwidth_nbytes_clear_write(1);
+#endif
+}
+
+static void status_short_disable(void)
+{
+	wprintf("Disabling status\r\n");
+	status_short_enabled = 0;
+}
+
+
 static void debug_ddr(void);
+
+static void status_short_print(void)
+{
+#ifdef CSR_HDMI_IN0_BASE
+	wprintf(
+		"input0: %dx%d, ",
+		hdmi_in0_resdetection_hres_read(),
+		hdmi_in0_resdetection_vres_read());
+#endif
+
+#ifdef CSR_HDMI_IN1_BASE
+	wprintf(
+		"input1: %dx%d, ",
+		hdmi_in1_resdetection_hres_read(),
+		hdmi_in1_resdetection_vres_read());
+#endif
+
+#ifdef CSR_HDMI_OUT0_BASE
+	wprintf("output0: ");
+	if(hdmi_out0_core_initiator_enable_read())
+		wprintf(
+			"%dx%d@%dHz (%s), ",
+			processor_h_active,
+			processor_v_active,
+			processor_refresh,
+			processor_get_source_name(processor_hdmi_out0_source));
+	else
+		wprintf("off, ");
+#endif
+
+#ifdef CSR_HDMI_OUT1_BASE
+	wprintf("output1: ");
+	if(hdmi_out1_core_initiator_enable_read())
+		wprintf(
+			"%dx%d@%uHz (%s), ",
+			processor_h_active,
+			processor_v_active,
+			processor_refresh,
+			processor_get_source_name(processor_hdmi_out1_source));
+	else
+		wprintf("off, ");
+#endif
+
+#ifdef ENCODER_BASE
+	wprintf("encoder: ");
+	if(encoder_enabled) {
+		wprintf(
+			"%dx%d@%dfps (%dMbps) %s (q:%d), ",
+			processor_h_active,
+			processor_v_active,
+			encoder_fps,
+			encoder_bandwidth_nbytes_read()*8/1000000,
+			processor_get_source_name(processor_encoder_source),
+			encoder_quality);
+		encoder_bandwidth_nbytes_clear_write(1);
+	} else
+		wprintf("off, ");
+#endif
+#ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
+	wprintf("ddr: ");
+	debug_ddr();
+#endif
+wprintf("\r\n");
+}
 
 static void status_print(void)
 {
@@ -308,6 +397,7 @@ static void status_print(void)
 #ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
 	wprintf("ddr: ");
 	debug_ddr();
+	wprintf("\r\n");
 #endif
 }
 
@@ -320,6 +410,9 @@ static void status_service(void)
 			status_print();
 			wprintf("\r\n");
 		}
+		if(status_short_enabled) {
+		    status_short_print();
+        }
 	}
 }
 
@@ -525,7 +618,7 @@ static void debug_ddr(void)
 	burstbits = (2*DFII_NPHASES) << DFII_PIX_DATA_SIZE;
 	rdb = (nr*f >> (24 - log2(burstbits)))/1000000ULL;
 	wrb = (nw*f >> (24 - log2(burstbits)))/1000000ULL;
-	wprintf("read:%5dMbps  write:%5dMbps  all:%5dMbps\r\n", rdb, wrb, rdb + wrb);
+	wprintf("read:%5dMbps write:%5dMbps all:%5dMbps", rdb, wrb, rdb + wrb);
 }
 #endif
 
@@ -677,7 +770,16 @@ void ci_service(void)
 #endif
 	else if((strcmp(token, "status") == 0) || (strcmp(token, "s") == 0)) {
 		token = get_token(&str);
-		if(strcmp(token, "on") == 0)
+		if(strcmp(token, "short") == 0) {
+			token = get_token(&str);
+            if(strcmp(token, "on") == 0)
+                status_short_enable();
+            else if(strcmp(token, "off") == 0)
+                status_short_disable();
+            else
+                status_short_print();
+        }
+		else if(strcmp(token, "on") == 0)
 			status_enable();
 		else if(strcmp(token, "off") == 0)
 			status_disable();
@@ -701,8 +803,10 @@ void ci_service(void)
 		}
 #endif
 #ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
-		else if(strcmp(token, "ddr") == 0)
+		else if(strcmp(token, "ddr") == 0) {
 			debug_ddr();
+            wprintf("\r\n");
+        }
 #endif
 #ifdef CSR_DNA_ID_ADDR
 		else if(strcmp(token, "dna") == 0)
