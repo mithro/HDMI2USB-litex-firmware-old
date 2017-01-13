@@ -20,12 +20,12 @@ if [ $SOURCED = 0 ]; then
 	exit 1
 fi
 
-if [ ! -z $HDMI2USB_ENV ]; then
+if [ ! -z "$HDMI2USB_ENV" ]; then
 	echo "Already sourced this file."
 	return 1
 fi
 
-if [ ! -z $SETTINGS_FILE ]; then
+if [ ! -z "$SETTINGS_FILE" -o ! -z "$XILINX" ]; then
 	echo "You appear to have sourced the Xilinx ISE settings, these are incompatible with building."
 	echo "Please exit this terminal and run again from a clean shell."
 	return 1
@@ -94,9 +94,18 @@ if [ -z "$XILINX_DIR" ]; then
 	fi
 fi
 echo "        Xilinx directory is: $XILINX_DIR/opt/Xilinx/"
-# FIXME: Remove this when build/migen/mibuild/xilinx/programmer.py:_create_xsvf
-# understands the $MISOC_EXTRA_CMDLINE option.
-export PATH=$PATH:$XILINX_DIR/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64
+
+function check_exists {
+	TOOL=$1
+	if which $TOOL 2>&1; then
+		echo "$TOOL found at $(which $TOOL)"
+		return 0
+	else
+		echo "$TOOL *NOT* found"
+		echo "Please try running the $SETUP_DIR/download-env.sh script again."
+		return 1
+	fi
+}
 
 function check_version {
 	TOOL=$1
@@ -144,6 +153,18 @@ echo "Checking modules from conda"
 echo "---------------------------"
 export PATH=$CONDA_DIR/bin:$PATH
 
+# fxload
+
+
+
+check_exists fxload || return 1
+
+# flterm
+
+
+
+check_exists flterm || return 1
+
 # binutils for the target
 
 
@@ -179,6 +200,12 @@ check_import serial || return 1
 
 
 check_import IPython || return 1
+
+# progressbar2 for progress bars
+
+
+
+check_import progressbar || return 1
 
 # hexfile for embedding the Cypress FX2 firmware.
 
@@ -230,5 +257,13 @@ hdmi2usb_prompt() {
 	fi
 
 	PS1="$P) $ORIG_PS1"
+
+	case "$TERM" in
+	xterm*|rxvt*)
+		PS1="$PS1\[\033]0;$P) \w\007\]"
+		;;
+	*)
+		;;
+	esac
 }
 PROMPT_COMMAND=hdmi2usb_prompt

@@ -19,6 +19,18 @@ if [ $SOURCED = 1 ]; then
 	return
 fi
 
+if [ ! -z "$HDMI2USB_ENV" ]; then
+	echo "You appear to have sourced the HDMI2USB settings, these are incompatible with setting up."
+	echo "Please exit this terminal and run again from a clean shell."
+	exit 1
+fi
+
+if [ ! -z "$SETTINGS_FILE" -o ! -z "$XILINX" ]; then
+	echo "You appear to have sourced the Xilinx ISE settings, these are incompatible with setting up."
+	echo "Please exit this terminal and run again from a clean shell."
+	exit 1
+fi
+
 set -e
 
 . $SETUP_DIR/settings.sh
@@ -33,21 +45,15 @@ if [ ! -d $BUILD_DIR ]; then
 	mkdir -p $BUILD_DIR
 fi
 
-# Xilinx ISE
-
+# FIXME: Move this to a separate script!
+# Cutback Xilinx ISE for CI
 # --------
 # Save the passphrase to a file so we don't echo it in the logs
-XILINX_PASSPHRASE_FILE=$(tempfile)
-trap "rm -f -- '$XILINX_PASSPHRASE_FILE'" EXIT
 if [ ! -z "$XILINX_PASSPHRASE" ]; then
+	XILINX_PASSPHRASE_FILE=$(tempfile -s .passphrase | mktemp --suffix=.passphrase)
+	trap "rm -f -- '$XILINX_PASSPHRASE_FILE'" EXIT
 	echo $XILINX_PASSPHRASE >> $XILINX_PASSPHRASE_FILE
-else
-	rm $XILINX_PASSPHRASE_FILE
-	trap - EXIT
-fi
-# --------
 
-if [ -f $XILINX_PASSPHRASE_FILE ]; then
 	# Need gpg to do the unencryption
 	XILINX_DIR=$BUILD_DIR/Xilinx
 	if [ ! -d "$XILINX_DIR" ]; then
@@ -90,10 +96,22 @@ if [ -f $XILINX_PASSPHRASE_FILE ]; then
 
 	rm $XILINX_PASSPHRASE_FILE
 	trap - EXIT
-else
+elif [ -z "$XILINX_DIR" ]; then
 	XILINX_DIR=/
 fi
 echo "        Xilinx directory is: $XILINX_DIR/opt/Xilinx/"
+
+function check_exists {
+	TOOL=$1
+	if which $TOOL 2>&1; then
+		echo "$TOOL found at $(which $TOOL)"
+		return 0
+	else
+		echo "$TOOL *NOT* found"
+		echo "Please try running the $SETUP_DIR/download-env.sh script again."
+		return 1
+	fi
+}
 
 function check_version {
 	TOOL=$1
@@ -130,7 +148,7 @@ function check_import_version {
 		return 0
 	else
 		echo "$MODULE (version $EXPECT_VERSION) *NOT* found!"
-		echo "Please try running the $SETUP_DIR/get-env.sh script again."
+		echo "Please try running the $SETUP_DIR/download-env.sh script again."
 		return 1
 	fi
 }
@@ -151,6 +169,18 @@ export PATH=$CONDA_DIR/bin:$PATH
 	fi
 	conda config --add channels timvideos
 )
+
+# fxload
+#(
+#	conda install fxload
+#)
+check_exists fxload || return 1
+
+# flterm
+(
+	conda install flterm
+)
+check_exists flterm
 
 # binutils for the target
 (
@@ -187,6 +217,12 @@ check_import serial
 	conda install ipython
 )
 check_import IPython
+
+# progressbar2 for progress bars
+(
+	pip install --upgrade progressbar2
+)
+check_import progressbar
 
 # hexfile for embedding the Cypress FX2 firmware.
 (

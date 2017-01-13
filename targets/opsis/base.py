@@ -1,3 +1,4 @@
+# Support for Numato Opsis - https://opsis.hdmi2usb.tv
 from fractions import Fraction
 
 from litex.gen import *
@@ -14,11 +15,9 @@ from litedram.modules import MT41J128M16
 from litedram.phy import s6ddrphy
 from litedram.core import ControllerSettings
 
-from gateware import dna
-from gateware import git_info
-#from gateware import i2c
-#from gateware import i2c_hack
-from gateware import platform_info
+from gateware import info
+from gateware import i2c
+from gateware import i2c_hack
 from gateware import shared_uart
 
 from targets.utils import csr_map_update
@@ -60,6 +59,7 @@ class _CRG(Module):
         self.clock_domains.cd_sdram_full_rd = ClockDomain()
         # Clock domain for peripherals (such as HDMI output).
         self.clock_domains.cd_base50 = ClockDomain()
+        self.clock_domains.cd_encoder = ClockDomain()
 
         self.reset = Signal()
 
@@ -85,7 +85,7 @@ class _CRG(Module):
         unbuf_sdram_full = Signal()
         unbuf_sdram_half_a = Signal()
         unbuf_sdram_half_b = Signal()
-        unbuf_unused = Signal()
+        unbuf_encoder = Signal()
         unbuf_sys = Signal()
         unbuf_sys2x = Signal()
 
@@ -94,6 +94,7 @@ class _CRG(Module):
         pll_fb = Signal()
         self.specials.pll = Instance(
             "PLL_ADV",
+            name="crg_pll_adv",
             p_SIM_DEVICE="SPARTAN6", p_BANDWIDTH="OPTIMIZED", p_COMPENSATION="INTERNAL",
             p_REF_JITTER=.01,
             i_DADDR=0, i_DCLK=0, i_DEN=0, i_DI=0, i_DWE=0, i_RST=0, i_REL=0,
@@ -111,9 +112,9 @@ class _CRG(Module):
             # (400MHz) ddr3 wr/rd full clock
             o_CLKOUT0=unbuf_sdram_full, p_CLKOUT0_DUTY_CYCLE=.5,
             p_CLKOUT0_PHASE=0., p_CLKOUT0_DIVIDE=p//8,
-            # unused?
-            o_CLKOUT1=unbuf_unused, p_CLKOUT1_DUTY_CYCLE=.5,
-            p_CLKOUT1_PHASE=0., p_CLKOUT1_DIVIDE=p//8,
+            # ( 66MHz) encoder
+            o_CLKOUT1=unbuf_encoder, p_CLKOUT1_DUTY_CYCLE=.5,
+            p_CLKOUT1_PHASE=0., p_CLKOUT1_DIVIDE=6,
             # (200MHz) sdram_half - ddr3 dqs adr ctrl off-chip
             o_CLKOUT2=unbuf_sdram_half_a, p_CLKOUT2_DUTY_CYCLE=.5,
             p_CLKOUT2_PHASE=230., p_CLKOUT2_DIVIDE=p//4,
@@ -137,12 +138,12 @@ class _CRG(Module):
         self.specials += AsyncResetSynchronizer(self.cd_por, reset)
 
         # System clock - 50MHz
-        self.specials += Instance("BUFG", i_I=unbuf_sys, o_O=self.cd_sys.clk)
+        self.specials += Instance("BUFG", name="sys_bufg", i_I=unbuf_sys, o_O=self.cd_sys.clk)
         self.comb += self.cd_por.clk.eq(self.cd_sys.clk)
         self.specials += AsyncResetSynchronizer(self.cd_sys, ~pll_lckd | (por > 0))
 
         # sys2x
-        self.specials += Instance("BUFG", i_I=unbuf_sys2x, o_O=self.cd_sys2x.clk)
+        self.specials += Instance("BUFG", name="sys2x_bufg", i_I=unbuf_sys2x, o_O=self.cd_sys2x.clk)
         self.specials += AsyncResetSynchronizer(self.cd_sys2x, ~pll_lckd | (por > 0))
 
         # SDRAM clocks
@@ -151,7 +152,8 @@ class _CRG(Module):
         self.clk8x_rd_strb = Signal()
 
         # sdram_full
-        self.specials += Instance("BUFPLL", p_DIVIDE=4,
+        self.specials += Instance("BUFPLL", name="sdram_full_bufpll",
+                                  p_DIVIDE=4,
                                   i_PLLIN=unbuf_sdram_full, i_GCLK=self.cd_sys2x.clk,
                                   i_LOCKED=pll_lckd,
                                   o_IOCLK=self.cd_sdram_full_wr.clk,
@@ -161,9 +163,9 @@ class _CRG(Module):
             self.clk8x_rd_strb.eq(self.clk8x_wr_strb),
         ]
         # sdram_half
-        self.specials += Instance("BUFG", i_I=unbuf_sdram_half_a, o_O=self.cd_sdram_half.clk)
+        self.specials += Instance("BUFG", name="sdram_half_a_bufpll", i_I=unbuf_sdram_half_a, o_O=self.cd_sdram_half.clk)
         clk_sdram_half_shifted = Signal()
-        self.specials += Instance("BUFG", i_I=unbuf_sdram_half_b, o_O=clk_sdram_half_shifted)
+        self.specials += Instance("BUFG", name="sdram_half_b_bufpll", i_I=unbuf_sdram_half_b, o_O=clk_sdram_half_shifted)
 
         output_clk = Signal()
         clk = platform.request("ddram_clock")
@@ -181,19 +183,67 @@ class _CRG(Module):
         # the system clock to be increased in the future.
         dcm_base50_locked = Signal()
         self.specials += [
-            Instance("DCM_CLKGEN",
-                     p_CLKFXDV_DIVIDE=2, p_CLKFX_DIVIDE=4,
-                     p_CLKFX_MD_MAX=1.0, p_CLKFX_MULTIPLY=2,
-                     p_CLKIN_PERIOD=10.0, p_SPREAD_SPECTRUM="NONE",
+            Instance("DCM_CLKGEN", name="crg_periph_dcm_clkgen",
+                     p_CLKIN_PERIOD=10.0,
+                     p_CLKFX_MULTIPLY=2,
+                     p_CLKFX_DIVIDE=4,
+                     p_CLKFX_MD_MAX=0.5, # CLKFX_MULTIPLY/CLKFX_DIVIDE
+                     p_CLKFXDV_DIVIDE=2,
+                     p_SPREAD_SPECTRUM="NONE",
                      p_STARTUP_WAIT="FALSE",
 
-                     i_CLKIN=clk100a, o_CLKFX=self.cd_base50.clk,
+                     i_CLKIN=clk100a,
+                     o_CLKFX=self.cd_base50.clk,
                      o_LOCKED=dcm_base50_locked,
-                     i_FREEZEDCM=0, i_RST=ResetSignal()),
+                     i_FREEZEDCM=0,
+                     i_RST=ResetSignal(),
+                     ),
             AsyncResetSynchronizer(self.cd_base50,
                 self.cd_sys.rst | ~dcm_base50_locked)
         ]
         platform.add_period_constraint(self.cd_base50.clk, 20)
+
+        # Encoder clock - 66 MHz
+        # ------------------------------------------------------------------------------
+        self.specials += Instance("BUFG", name="encoder_bufg", i_I=unbuf_encoder, o_O=self.cd_encoder.clk)
+        self.specials += AsyncResetSynchronizer(self.cd_encoder, self.cd_sys.rst)
+
+
+class TOFE(Module, AutoCSR):
+    def __init__(self, platform, shared_uart):
+        # TOFE board
+        tofe_pads = platform.request('tofe')
+        self.submodules.i2c = i2c.I2C(tofe_pads)
+        tofe_rst = Signal(1) # rst
+        self.submodules.rst = GPIOOut(tofe_rst)
+        self.comb += [
+            tofe_pads.rst.eq(~tofe_rst[0]),
+        ]
+
+        # TOFE LowSpeedIO board
+        # ---------------------------------
+        # UARTs
+        shared_uart.add_uart_pads(platform.request('tofe_lsio_serial'))
+        shared_uart.add_uart_pads(platform.request('tofe_lsio_pmod_serial'))
+
+        # LEDs
+        lsio_leds = Signal(4)
+        self.submodules.lsio_leds = GPIOOut(lsio_leds)
+        self.comb += [
+            platform.request('tofe_lsio_user_led', 0).eq(lsio_leds[0]),
+            platform.request('tofe_lsio_user_led', 1).eq(lsio_leds[1]),
+            platform.request('tofe_lsio_user_led', 2).eq(lsio_leds[2]),
+            platform.request('tofe_lsio_user_led', 3).eq(lsio_leds[3]),
+        ]
+        # Switches
+#        lsio_sws = Signal(4)
+#        self.submodules.lsio_sws = GPIOIn(lsio_sws)
+#        self.comb += [
+#            lsio_sws[0].eq(~platform.request('tofe_lsio_user_sw', 0)),
+#            lsio_sws[1].eq(~platform.request('tofe_lsio_user_sw', 1)),
+#            lsio_sws[2].eq(~platform.request('tofe_lsio_user_sw', 2)),
+#            lsio_sws[3].eq(~platform.request('tofe_lsio_user_sw', 3)),
+#        ]
 
 
 class BaseSoC(SoCSDRAM):
@@ -201,15 +251,11 @@ class BaseSoC(SoCSDRAM):
         "spiflash",
         "front_panel",
         "ddrphy",
-        "dna",
-        "git_info",
-        "platform_info",
-#        "fx2_reset",
-#        "fx2_hack",
-#        "opsis_eeprom_i2c",
-        "tofe_ctrl",
-        "tofe_lsio_leds",
-        "tofe_lsio_sws",
+        "info",
+        "fx2_reset",
+        "fx2_hack",
+        "tofe",
+#        "gpio",
     )
     csr_map_update(SoCSDRAM.csr_map, csr_peripherals)
 
@@ -217,7 +263,6 @@ class BaseSoC(SoCSDRAM):
         "spiflash":     0x20000000,  # (default shadow @0xa0000000)
     }
     mem_map.update(SoCSDRAM.mem_map)
-
 
     def __init__(self, platform, **kwargs):
         clk_freq = 50*1000000
@@ -229,15 +274,10 @@ class BaseSoC(SoCSDRAM):
         self.submodules.crg = _CRG(platform, clk_freq)
         self.platform.add_period_constraint(self.crg.cd_sys.clk, 1e9/clk_freq)
 
-        self.submodules.dna = dna.DNA()
-        self.submodules.git_info = git_info.GitInfo()
-        self.submodules.platform_info = platform_info.PlatformInfo("opsis", self.__class__.__name__[:8])
+        self.submodules.fx2_reset = GPIOOut(platform.request("fx2_reset"))
+        self.submodules.fx2_hack = i2c_hack.I2CShiftReg(platform.request("opsis_eeprom"))
 
-#        self.submodules.opsis_eeprom_i2c = i2c.I2C(platform.request("opsis_eeprom"))
-#        self.submodules.fx2_reset = gpio.GPIOOut(platform.request("fx2_reset"))
-#        self.submodules.fx2_hack = i2c_hack.I2CShiftReg(platform.request("opsis_eeprom"))
-
-#        self.submodules.tofe_eeprom_i2c = i2c.I2C(platform.request("tofe_eeprom"))
+        self.submodules.info = info.Info(platform, "opsis", self.__class__.__name__[:8])
 
         self.submodules.suart = shared_uart.SharedUART(self.clk_freq, 115200)
         self.suart.add_uart_pads(platform.request('fx2_serial'))
@@ -274,39 +314,15 @@ class BaseSoC(SoCSDRAM):
             self.ddrphy.clk8x_rd_strb.eq(self.crg.clk8x_rd_strb),
         ]
 
-        # TOFE board
-        tofe_ctrl = Signal(3) # rst, sda, scl
-        ptofe_ctrl = platform.request('tofe')
-        self.submodules.tofe_ctrl = GPIOOut(tofe_ctrl)
-        self.comb += [
-            ptofe_ctrl.rst.eq(~tofe_ctrl[0]),
-            ptofe_ctrl.sda.eq(~tofe_ctrl[1]),
-            ptofe_ctrl.scl.eq(~tofe_ctrl[2]),
-        ]
-
-        # TOFE LowSpeedIO board
-        # ---------------------------------
-        # UARTs
-        self.suart.add_uart_pads(platform.request('tofe_lsio_serial'))
-        self.suart.add_uart_pads(platform.request('tofe_lsio_pmod_serial'))
-        # LEDs
-        tofe_lsio_leds = Signal(4)
-        self.submodules.tofe_lsio_leds = GPIOOut(tofe_lsio_leds)
-        self.comb += [
-            platform.request('tofe_lsio_user_led', 0).eq(tofe_lsio_leds[0]),
-            platform.request('tofe_lsio_user_led', 1).eq(tofe_lsio_leds[1]),
-            platform.request('tofe_lsio_user_led', 2).eq(tofe_lsio_leds[2]),
-            platform.request('tofe_lsio_user_led', 3).eq(tofe_lsio_leds[3]),
-        ]
-        # Switches
-        tofe_lsio_sws = Signal(4)
-        self.submodules.tofe_lsio_sws = GPIOIn(tofe_lsio_sws)
-        self.comb += [
-            tofe_lsio_sws[0].eq(~platform.request('tofe_lsio_user_sw', 0)),
-            tofe_lsio_sws[1].eq(~platform.request('tofe_lsio_user_sw', 1)),
-            tofe_lsio_sws[2].eq(~platform.request('tofe_lsio_user_sw', 2)),
-            tofe_lsio_sws[3].eq(~platform.request('tofe_lsio_user_sw', 3)),
-        ]
+        self.submodules.tofe = TOFE(platform, self.suart)
+#        lsio_leds = Signal(4)
+#        self.submodules.gpio = GPIOOut(lsio_leds)
+#        self.comb += [
+#            platform.request('tofe_lsio_user_led', 0).eq(lsio_leds[0]),
+#            platform.request('tofe_lsio_user_led', 1).eq(lsio_leds[1]),
+#            platform.request('tofe_lsio_user_led', 2).eq(lsio_leds[2]),
+#            platform.request('tofe_lsio_user_led', 3).eq(lsio_leds[3]),
+#        ]
 
 
 SoC = BaseSoC

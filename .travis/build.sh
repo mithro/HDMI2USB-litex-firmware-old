@@ -1,8 +1,11 @@
 #!/bin/bash
 
 if [ -z "$PLATFORMS" ]; then
+	if [ -z "$SKIP_PLATFORMS" ]; then
+		SKIP_PLATFORMS="sim"
+	fi
 	if [ -z "$PLATFORM" ]; then
-		PLATFORMS=$(ls targets/ | grep -v ".py" | grep -v "common" | sed -e"s+targets/++")
+		PLATFORMS=$(ls targets/ | grep -v ".py" | grep -v "common" | grep -v "$SKIP_PLATFORMS" | sed -e"s+targets/++")
 	else
 		PLATFORMS="$PLATFORM"
 	fi
@@ -63,18 +66,22 @@ function build() {
 	echo "- Firmware version data"
 	echo "---------------------------------------------"
 	VERSION_DATA="$(find $TARGET_BUILD_DIR -name version_data.c)"
-	cat $VERSION_DATA
+	if [ -z "$VERSION_DATA" ]; then
+		echo "No firmware version_data.c file found!"
+	else
+		cat $VERSION_DATA
+
+		if grep -q -- "??" $VERSION_DATA; then
+			echo "Repository had unknown files, failing to build!"
+#			return 1
+		fi
+
+		if grep -q -- "-dirty" $VERSION_DATA; then
+			echo "Repository was dirty, failing to build!"
+#			return 1
+		fi
+	fi
 	echo "---------------------------------------------"
-
-	if grep -q -- "??" $VERSION_DATA; then
-		echo "Repository had unknown files, failing to build!"
-#		return 1
-	fi
-
-	if grep -q -- "-dirty" $VERSION_DATA; then
-		echo "Repository was dirty, failing to build!"
-#		return 1
-	fi
 
 	# https://github.com/timvideos/HDMI2USB-misoc-firmware/issues/83
 	# We have to clean after doing this otherwise if the gateware
@@ -215,8 +222,11 @@ declare -a FAILURES
 
 for PLATFORM in $PLATFORMS; do
 	if [ -z "$TARGETS" ]; then
+		if [ -z "$SKIP_TARGETS" ]; then
+			SKIP_TARGETS="__"
+		fi
 		if [ -z "$TARGET" -a -z "$TARGETS" ]; then
-			TARGETS=$(ls targets/${PLATFORM}/*.py | grep -v "__" | sed -e"s+targets/${PLATFORM}/++" -e"s/.py//")
+			TARGETS=$(ls targets/${PLATFORM}/*.py | grep -v "__" | grep -v "$SKIP_TARGETS" | sed -e"s+targets/${PLATFORM}/++" -e"s/.py//")
 		else
 			TARGETS="$TARGET"
 		fi

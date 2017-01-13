@@ -1,6 +1,23 @@
+/*
+ * Copyright 2015 / TimVideo.us
+ * Copyright 2015 / EnjoyDigital
+ * Copyright 2017 Joel Addison <joel@addison.net.au>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "stdio_wrap.h"
+
 
 #include <generated/csr.h>
 #include <generated/mem.h>
@@ -58,8 +75,10 @@ References:
  * http://martin.hinner.info/vga/timing.html
  * VESA Modes - http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/etc/vesamodes
  * 720p and TV modes - https://www.mythtv.org/wiki/Modeline_Database
-
 */
+
+static struct video_timing custom_modes[1];
+
 static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 	// 640x480 @ 72Hz (VESA) hsync: 37.9kHz
 	// ModeLine "640x480"    31.5  640  664  704  832    480  489  491  520
@@ -76,6 +95,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 40,
 		.v_sync_offset = 9,
 		.v_sync_width = 3,
+
+		.flags = EDID_DIGITAL,
 
 		.established_timing = 0x0800
 	},
@@ -95,6 +116,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_sync_offset = 1,
 		.v_sync_width = 3,
 
+		.flags = EDID_DIGITAL,
+
 		.established_timing = 0x0400
 	},
 	// 800x600 @ 56Hz (VESA) hsync: 35.2kHz
@@ -111,6 +134,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 25,
 		.v_sync_offset = 1,
 		.v_sync_width = 2,
+
+		.flags = EDID_DIGITAL,
 
 		.established_timing = 0x0200
 	},
@@ -129,6 +154,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_sync_offset = 1,
 		.v_sync_width = 4,
 
+		.flags = EDID_DIGITAL,
+
 		.established_timing = 0x0100
 	},
 	// 800x600 @ 72Hz (VESA) hsync: 48.1kHz
@@ -145,6 +172,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 66,
 		.v_sync_offset = 37,
 		.v_sync_width = 6,
+
+		.flags = EDID_DIGITAL,
 
 		.established_timing = 0x0080
 	},
@@ -163,6 +192,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_sync_offset = 1,
 		.v_sync_width = 3,
 
+		.flags = EDID_DIGITAL,
+
 		.established_timing = 0x0040
 	},
 	// 1024x768 @ 60Hz (VESA) hsync: 48.4kHz
@@ -179,6 +210,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 38,
 		.v_sync_offset = 3,
 		.v_sync_width = 6,
+
+		.flags = EDID_DIGITAL,
 
 		.established_timing = 0x0008
 	},
@@ -197,6 +230,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_sync_offset = 3,
 		.v_sync_width = 6,
 
+		.flags = EDID_DIGITAL,
+
 		.established_timing = 0x0004
 	},
 	// 1024x768 @ 75Hz (VESA) hsync: 60.0kHz
@@ -214,6 +249,8 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_sync_offset = 1,
 		.v_sync_width = 3,
 
+		.flags = EDID_DIGITAL,
+
 		.established_timing = 0x0002
 	},
 	// 720p @ 60Hz
@@ -229,7 +266,9 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_active = 720,
 		.v_blanking = 30,
 		.v_sync_offset = 20,
-		.v_sync_width = 5
+		.v_sync_width = 5,
+
+		.flags = EDID_DIGITAL | EDID_HSYNC_POS | EDID_VSYNC_POS
 	},
 	// Other 720p60 modes not enabled...
 	//1280	720	60 Hz	44.9576 kHz	ModeLine "1280x720"		74.18  1280 1390 1430 1650 720 725 730 750 +HSync +VSync
@@ -251,7 +290,9 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_active = 720,
 		.v_blanking = 30,
 		.v_sync_offset = 5,
-		.v_sync_width = 5
+		.v_sync_width = 5,
+
+		.flags = EDID_DIGITAL | EDID_HSYNC_POS | EDID_VSYNC_POS
 	},
 	// 1920x1080 @ 30.00 Hz    ModeLine "1920x1080" 89.01 1920 2448 2492 2640 1080 1084 1089 1125 +HSync +VSync
 	{
@@ -265,7 +306,9 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_active = 1080,
 		.v_blanking = 45,
 		.v_sync_offset = 4,
-		.v_sync_width = 5
+		.v_sync_width = 5,
+
+		.flags = EDID_DIGITAL | EDID_HSYNC_POS | EDID_VSYNC_POS
 	},
 	// 720x480 @ 60.00 Hz    Modeline "720x480" 26.72 720 736 808 896 480 481 484 497 -HSync +Vsync
 	{
@@ -280,9 +323,12 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 17,
 		.v_sync_offset = 1,
 		.v_sync_width = 3,
+
+		.flags = EDID_DIGITAL | EDID_HSYNC_POS | EDID_VSYNC_POS,
+
 		.comment = "(HV20/HV30 in NTSC mode)"
 	},
-	// 720x576 @ 50.00 Hz    Modeline 720x576" 32.67 720 744 816 912 576 577 580 597 -HSync +Vsyncc
+	// 720x576 @ 50.00 Hz    Modeline "720x576" 32.67 720 744 816 912 576 577 580 597 -HSync +Vsync
 	{
 		.pixel_clock = 3267,
 
@@ -295,22 +341,31 @@ static const struct video_timing video_modes[PROCESSOR_MODE_COUNT] = {
 		.v_blanking = 21,
 		.v_sync_offset = 1,
 		.v_sync_width = 3,
-		.comment = "(HV20/HV30 in PAL mode)"
-	}
 
+		.flags = EDID_DIGITAL | EDID_HSYNC_POS | EDID_VSYNC_POS,
+
+		.comment = "(HV20/HV30 in PAL mode)"
+	},
 };
 
 void processor_list_modes(char *mode_descriptors)
 {
 	int i;
 	for(i=0;i<PROCESSOR_MODE_COUNT;i++) {
-		sprintf(&mode_descriptors[PROCESSOR_MODE_DESCLEN*i],
-			"%ux%u @%uHz %s",
-			video_modes[i].h_active,
-			video_modes[i].v_active,
-			calculate_refresh_rate(&(video_modes[i])),
-			video_modes[i].comment ? video_modes[i].comment : "");
+		processor_describe_mode(&mode_descriptors[PROCESSOR_MODE_DESCLEN*i], i);
 	}
+}
+
+void processor_describe_mode(char *mode_descriptor, int mode)
+{
+	if (mode >= PROCESSOR_MODE_COUNT) return;
+	unsigned refresh_rate = calculate_refresh_rate(&(video_modes[mode]));
+	sprintf(mode_descriptor,
+		"%ux%u@" REFRESH_RATE_PRINTF "Hz %s",
+		video_modes[mode].h_active,
+		video_modes[mode].v_active,
+		REFRESH_RATE_PRINTF_ARGS(refresh_rate),
+		video_modes[mode].comment ? video_modes[mode].comment : "");
 }
 
 static void fb_clkgen_write(int cmd, int data)
@@ -354,10 +409,16 @@ static void fb_get_clock_md(unsigned int pixel_clock, unsigned int *best_m, unsi
 static void fb_set_mode(const struct video_timing *mode)
 {
 	unsigned int clock_m, clock_d;
+	unsigned int hdmi_out0_enabled;
+	unsigned int hdmi_out1_enabled;
 
 	fb_get_clock_md(mode->pixel_clock, &clock_m, &clock_d);
 
 #ifdef CSR_HDMI_OUT0_BASE
+	if (hdmi_out0_core_initiator_enable_read()) {
+		hdmi_out0_enabled = 1;
+		hdmi_out0_core_initiator_enable_write(0);
+	}
 	hdmi_out0_core_initiator_hres_write(mode->h_active);
 	hdmi_out0_core_initiator_hsync_start_write(mode->h_active + mode->h_sync_offset);
 	hdmi_out0_core_initiator_hsync_end_write(mode->h_active + mode->h_sync_offset + mode->h_sync_width);
@@ -368,9 +429,15 @@ static void fb_set_mode(const struct video_timing *mode)
 	hdmi_out0_core_initiator_vscan_write(mode->v_active + mode->v_blanking);
 
 	hdmi_out0_core_initiator_length_write(mode->h_active*mode->v_active*2);
+
+	hdmi_out0_core_initiator_enable_write(hdmi_out0_enabled);
 #endif
 
 #ifdef CSR_HDMI_OUT1_BASE
+	if (hdmi_out1_core_initiator_enable_read()) {
+		hdmi_out1_enabled = 1;
+		hdmi_out1_core_initiator_enable_write(0);
+	}
 	hdmi_out1_core_initiator_hres_write(mode->h_active);
 	hdmi_out1_core_initiator_hsync_start_write(mode->h_active + mode->h_sync_offset);
 	hdmi_out1_core_initiator_hsync_end_write(mode->h_active + mode->h_sync_offset + mode->h_sync_width);
@@ -381,6 +448,8 @@ static void fb_set_mode(const struct video_timing *mode)
 	hdmi_out1_core_initiator_vscan_write(mode->v_active + mode->v_blanking);
 
 	hdmi_out1_core_initiator_length_write(mode->h_active*mode->v_active*2);
+
+	hdmi_out1_core_initiator_enable_write(hdmi_out1_enabled);
 #endif
 
 	fb_clkgen_write(0x1, clock_d-1);
@@ -393,27 +462,28 @@ static void fb_set_mode(const struct video_timing *mode)
 #endif
 }
 
-static void edid_set_mode(const struct video_timing *mode)
+static void edid_set_mode(const struct video_timing *mode, const struct video_timing *sec_mode)
 {
 #if defined(CSR_HDMI_IN0_BASE) || defined(CSR_HDMI_IN1_BASE)
 	unsigned char edid[128];
 	int i;
 #endif
 #ifdef CSR_HDMI_IN0_BASE
-	generate_edid(&edid, "OHW", "TV", 2015, "HDMI2USB 1", mode);
+	generate_edid(&edid, "OHW", "TV", 2015, "HDMI2USB-1", mode, sec_mode);
 	for(i=0;i<sizeof(edid);i++)
 		MMPTR(CSR_HDMI_IN0_EDID_MEM_BASE+4*i) = edid[i];
 #endif
 #ifdef CSR_HDMI_IN1_BASE
-	generate_edid(&edid, "OHW", "TV", 2015, "HDMI2USB 2", mode);
+	generate_edid(&edid, "OHW", "TV", 2015, "HDMI2USB-2", mode, sec_mode);
 	for(i=0;i<sizeof(edid);i++)
 		MMPTR(CSR_HDMI_IN1_EDID_MEM_BASE+4*i) = edid[i];
 #endif
 }
 
 int processor_mode = 0;
+int processor_secondary_mode = EDID_SECONDARY_MODE_OFF;
 
-void processor_init(void)
+void processor_init(int sec_mode)
 {
 	processor_hdmi_out0_source = VIDEO_IN_HDMI_IN0;
 	processor_hdmi_out1_source = VIDEO_IN_HDMI_IN0;
@@ -423,12 +493,25 @@ void processor_init(void)
 		encoder_target_fps = 30;
 #endif
 	pattern = COLOR_BAR_PATTERN;
+	processor_secondary_mode = sec_mode;
 }
 
 void processor_start(int mode)
 {
-	const struct video_timing *m = &video_modes[mode];
+	const struct video_timing *m;
+	const struct video_timing *sec_mode = NULL;
+	if (processor_secondary_mode != EDID_SECONDARY_MODE_OFF &&
+			processor_secondary_mode != mode)
+		sec_mode = &video_modes[processor_secondary_mode];
+
+	if (mode == PROCESSOR_MODE_CUSTOM) {
+		m = &custom_modes[0];
+	} else {
+		m = &video_modes[mode];
+	}
+
 	processor_mode = mode;
+
 	processor_h_active = m->h_active;
 	processor_v_active = m->v_active;
 	processor_refresh = calculate_refresh_rate(m);
@@ -461,7 +544,7 @@ void processor_start(int mode)
 
 	pll_config_for_clock(m->pixel_clock);
 	fb_set_mode(m);
-	edid_set_mode(m);
+	edid_set_mode(m, sec_mode);
 #ifdef CSR_HDMI_IN0_BASE
 	hdmi_in0_init_video(m->h_active, m->v_active);
 #endif
@@ -538,22 +621,18 @@ void processor_update(void)
 
 #ifdef ENCODER_BASE
 	/*  encoder */
-// FIXME
-/*
 #ifdef CSR_HDMI_IN0_BASE
 	if(processor_encoder_source == VIDEO_IN_HDMI_IN0) {
-		encoder_reader_base_write((hdmi_in0_framebuffer_base(hdmi_in0_fb_index)));
+		encoder_reader_base_write(hdmi_in0_framebuffer_base(hdmi_in0_fb_index));
 	}
 #endif
 #ifdef CSR_HDMI_IN1_BASE
 	if(processor_encoder_source == VIDEO_IN_HDMI_IN1) {
-		encoder_reader_base_write((hdmi_in1_framebuffer_base(hdmi_in1_fb_index)));
+		encoder_reader_base_write(hdmi_in1_framebuffer_base(hdmi_in1_fb_index));
 	}
 #endif
 	if(processor_encoder_source == VIDEO_IN_PATTERN)
 		encoder_reader_base_write(pattern_framebuffer_base());
-*/
-// FIXME
 #endif
 }
 
@@ -569,4 +648,23 @@ void processor_service(void)
 #ifdef ENCODER_BASE
 	encoder_service();
 #endif
+
+}
+
+struct video_timing* processor_get_custom_mode(void)
+{
+	return &custom_modes[0];
+}
+
+void processor_set_custom_mode(void)
+{
+	processor_start(PROCESSOR_MODE_CUSTOM);
+}
+
+void processor_set_secondary_mode(int mode)
+{
+	processor_secondary_mode = mode;
+	// Start the processor again to set the new EDID,
+	// and force the computer to rescan the EDID.
+	processor_start(processor_mode);
 }

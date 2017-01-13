@@ -64,7 +64,10 @@ existing licenses.
   source /opt/Xilinx/14.7/ISE_DS/settings64.sh
   ise
   ```
-  Go to About > Licence, ensure under "information" you can see your ISE WebPACK licence.
+  Go to `Help` > `Manage Licence...`, ensure on the `Manage License` tab you
+  can see your WebPACK licence and it is green. The WebPACK license will be
+  named something like `WebPACK`, `V_WebPack` or `Web_Package` (depending on
+  when you got your license you might have all of them!).
 
 # Bootstrap HDMI2USB-litex-firmware and dependencies
  
@@ -117,15 +120,20 @@ something like:
 ```
 
 If your prompt does not change, then check the output to see whether there are
-any errors. You may also find it helpful to rerun the following commands and
-check those for errors.  (These are originally run by the scripts/bootstrap.sh
-script recommended for use to set up your environment in the previous step.)
+any errors. 
+
+### On failure
+
+You may also find it helpful to rerun the following commands and check those
+for errors. (These are originally run by the `scripts/bootstrap.sh` script
+recommended for use to set up your environment in the previous step.)
+
 Fix any errors reported (including install failures from apt) before
 continuing.
 ```
 cd HDMI2USB-litex-firmware
 sudo scripts/download-env-root.sh
-sudo scripts/download-env.sh
+scripts/download-env.sh
 ```
 
 ## 2) Build the gateware
@@ -148,7 +156,7 @@ Bitstream generation is complete.
 Firmware 56008 bytes (9528 bytes left)
 ```
 
-The built gateware will be in build/opsis_hdmi2usb_lm32/gateware/
+The built gateware will be in `build/opsis_hdmi2usb_lm32/gateware/`
 
 ## 3) Configure your board
 

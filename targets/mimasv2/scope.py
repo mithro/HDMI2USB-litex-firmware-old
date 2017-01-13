@@ -9,9 +9,6 @@ from litescope import LiteScopeIO
 from targets.utils import csr_map_update
 from targets.mimasv2.base import BaseSoC
 
-from gateware import shared_uart
-from gateware import dna
-
 
 class MemTestSoC(BaseSoC):
     csr_peripherals = (
@@ -45,11 +42,12 @@ class MemTestSoC(BaseSoC):
                 pass
 
         analyzer_signals = [
-            self.spiflash.cs_n,
-            self.spiflash.clk,
-            self.spiflash.dq_oe,
-            self.spiflash.dqi,
-            self.spiflash.sr,
+            self.spiflash.bus,
+        #    self.spiflash.cs_n,
+        #    self.spiflash.clk,
+        #    self.spiflash.dq_oe,
+        #    self.spiflash.dqi,
+        #    self.spiflash.sr,
         ]
         self.submodules.analyzer = LiteScopeAnalyzer(analyzer_signals, 1024)
 

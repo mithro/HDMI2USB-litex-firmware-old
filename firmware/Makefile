@@ -22,6 +22,7 @@ OBJECTS=\
 	encoder.o \
 	etherbone.o \
 	ethernet.o \
+	fx2.o \
 	hdmi_in0.o \
 	hdmi_in1.o \
 	hdmi_out0.o \
@@ -30,11 +31,13 @@ OBJECTS=\
 	isr.o \
 	main.o \
 	mdio.o \
+	opsis_eeprom.o \
 	pattern.o \
 	pll.o \
 	processor.o \
 	stdio_wrap.o \
 	telnet.o \
+	tofe_eeprom.o \
 	version.o \
 	version_data.o \
 

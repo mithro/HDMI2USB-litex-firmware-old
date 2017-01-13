@@ -13,11 +13,8 @@ from litedram.modules import P3R1GE4JGF
 from litedram.phy import s6ddrphy
 from litedram.core import ControllerSettings
 
-
 #from gateware import cas
-from gateware import dna
-from gateware import git_info
-from gateware import platform_info
+from gateware import info
 
 from targets.utils import csr_map_update
 
@@ -32,6 +29,7 @@ class _CRG(Module):
         self.clock_domains.cd_sdram_full_rd = ClockDomain()
         # Clock domain for peripherals (such as HDMI output).
         self.clock_domains.cd_base50 = ClockDomain()
+        self.clock_domains.cd_encoder = ClockDomain()
 
         self.reset = Signal()
 
@@ -57,15 +55,16 @@ class _CRG(Module):
         unbuf_sdram_full = Signal()
         unbuf_sdram_half_a = Signal()
         unbuf_sdram_half_b = Signal()
-        unbuf_unused1 = Signal()
-        unbuf_unused2 = Signal()
+        unbuf_encoder = Signal()
         unbuf_sys = Signal()
+        unbuf_unused = Signal()
 
         # PLL signals
         pll_lckd = Signal()
         pll_fb = Signal()
         self.specials.pll = Instance(
             "PLL_ADV",
+            name="crg_pll_adv",
             p_SIM_DEVICE="SPARTAN6", p_BANDWIDTH="OPTIMIZED", p_COMPENSATION="INTERNAL",
             p_REF_JITTER=.01,
             i_DADDR=0, i_DCLK=0, i_DEN=0, i_DI=0, i_DWE=0, i_RST=0, i_REL=0,
@@ -83,9 +82,9 @@ class _CRG(Module):
             # (300MHz) sdram wr rd
             o_CLKOUT0=unbuf_sdram_full, p_CLKOUT0_DUTY_CYCLE=.5,
             p_CLKOUT0_PHASE=0., p_CLKOUT0_DIVIDE=p//4,
-            # ( 66MHz) unused? - Was encoder
-            o_CLKOUT1=unbuf_unused1, p_CLKOUT1_DUTY_CYCLE=.5,
-            p_CLKOUT1_PHASE=0., p_CLKOUT1_DIVIDE=p//8,
+            # ( 66MHz) encoder
+            o_CLKOUT1=unbuf_encoder, p_CLKOUT1_DUTY_CYCLE=.5,
+            p_CLKOUT1_PHASE=0., p_CLKOUT1_DIVIDE=9,
             # (150MHz) sdram_half - sdram dqs adr ctrl
             o_CLKOUT2=unbuf_sdram_half_a, p_CLKOUT2_DUTY_CYCLE=.5,
             p_CLKOUT2_PHASE=270., p_CLKOUT2_DIVIDE=p//2,
@@ -93,7 +92,7 @@ class _CRG(Module):
             o_CLKOUT3=unbuf_sdram_half_b, p_CLKOUT3_DUTY_CYCLE=.5,
             p_CLKOUT3_PHASE=250., p_CLKOUT3_DIVIDE=p//2,
             # ( 50MHz) unused? - Was peripheral
-            o_CLKOUT4=unbuf_unused1, p_CLKOUT4_DUTY_CYCLE=.5,
+            o_CLKOUT4=unbuf_unused, p_CLKOUT4_DUTY_CYCLE=.5,
             p_CLKOUT4_PHASE=0., p_CLKOUT4_DIVIDE=12,
             # ( 75MHz) sysclk
             o_CLKOUT5=unbuf_sys, p_CLKOUT5_DUTY_CYCLE=.5,
@@ -109,7 +108,7 @@ class _CRG(Module):
         self.specials += AsyncResetSynchronizer(self.cd_por, reset)
 
         # System clock - 75MHz
-        self.specials += Instance("BUFG", i_I=unbuf_sys, o_O=self.cd_sys.clk)
+        self.specials += Instance("BUFG", name="sys_bufg", i_I=unbuf_sys, o_O=self.cd_sys.clk)
         self.comb += self.cd_por.clk.eq(self.cd_sys.clk)
         self.specials += AsyncResetSynchronizer(self.cd_sys, ~pll_lckd | (por > 0))
 
@@ -120,7 +119,8 @@ class _CRG(Module):
         self.clk4x_rd_strb = Signal()
 
         # sdram_full
-        self.specials += Instance("BUFPLL", p_DIVIDE=4,
+        self.specials += Instance("BUFPLL", name="sdram_full_bufpll",
+                                  p_DIVIDE=4,
                                   i_PLLIN=unbuf_sdram_full, i_GCLK=self.cd_sys.clk,
                                   i_LOCKED=pll_lckd,
                                   o_IOCLK=self.cd_sdram_full_wr.clk,
@@ -130,9 +130,9 @@ class _CRG(Module):
             self.clk4x_rd_strb.eq(self.clk4x_wr_strb),
         ]
         # sdram_half
-        self.specials += Instance("BUFG", i_I=unbuf_sdram_half_a, o_O=self.cd_sdram_half.clk)
+        self.specials += Instance("BUFG", name="sdram_half_a_bufpll", i_I=unbuf_sdram_half_a, o_O=self.cd_sdram_half.clk)
         clk_sdram_half_shifted = Signal()
-        self.specials += Instance("BUFG", i_I=unbuf_sdram_half_b, o_O=clk_sdram_half_shifted)
+        self.specials += Instance("BUFG", name="sdram_half_b_bufpll", i_I=unbuf_sdram_half_b, o_O=clk_sdram_half_shifted)
 
         output_clk = Signal()
         clk = platform.request("ddram_clock")
@@ -150,19 +150,30 @@ class _CRG(Module):
         # the system clock to be increased in the future.
         dcm_base50_locked = Signal()
         self.specials += [
-            Instance("DCM_CLKGEN",
-                     p_CLKFXDV_DIVIDE=2, p_CLKFX_DIVIDE=4,
-                     p_CLKFX_MD_MAX=1.0, p_CLKFX_MULTIPLY=2,
-                     p_CLKIN_PERIOD=10.0, p_SPREAD_SPECTRUM="NONE",
+            Instance("DCM_CLKGEN", name="crg_periph_dcm_clkgen",
+                     p_CLKIN_PERIOD=10.0,
+                     p_CLKFX_MULTIPLY=2,
+                     p_CLKFX_DIVIDE=4,
+                     p_CLKFX_MD_MAX=0.5, # CLKFX_MULTIPLY/CLKFX_DIVIDE
+                     p_CLKFXDV_DIVIDE=2,
+                     p_SPREAD_SPECTRUM="NONE",
                      p_STARTUP_WAIT="FALSE",
 
-                     i_CLKIN=clk100a, o_CLKFX=self.cd_base50.clk,
+                     i_CLKIN=clk100a,
+                     o_CLKFX=self.cd_base50.clk,
                      o_LOCKED=dcm_base50_locked,
-                     i_FREEZEDCM=0, i_RST=ResetSignal()),
+                     i_FREEZEDCM=0,
+                     i_RST=ResetSignal(),
+                     ),
             AsyncResetSynchronizer(self.cd_base50,
                 self.cd_sys.rst | ~dcm_base50_locked)
         ]
         platform.add_period_constraint(self.cd_base50.clk, 20)
+
+        # Encoder clock - 66 MHz
+        # ------------------------------------------------------------------------------
+        self.specials += Instance("BUFG", name="encoder_bufg", i_I=unbuf_encoder, o_O=self.cd_encoder.clk)
+        self.specials += AsyncResetSynchronizer(self.cd_encoder, self.cd_sys.rst)
 
 
 class BaseSoC(SoCSDRAM):
@@ -170,9 +181,7 @@ class BaseSoC(SoCSDRAM):
         "spiflash",
 #        "cas",
         "ddrphy",
-        "dna",
-        "git_info",
-        "platform_info",
+        "info",
     )
     csr_map_update(SoCSDRAM.csr_map, csr_peripherals)
 
@@ -191,9 +200,7 @@ class BaseSoC(SoCSDRAM):
         self.submodules.crg = _CRG(platform, clk_freq)
         self.platform.add_period_constraint(self.crg.cd_sys.clk, 1e9/clk_freq)
 
-        self.submodules.dna = dna.DNA()
-        self.submodules.git_info = git_info.GitInfo()
-        self.submodules.platform_info = platform_info.PlatformInfo("atlys", self.__class__.__name__[:8])
+        self.submodules.info = info.Info(platform, "atlys", self.__class__.__name__[:8])
 
         self.submodules.spiflash = spi_flash.SpiFlash(
             platform.request("spiflash4x"),

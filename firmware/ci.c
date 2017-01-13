@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 / TimVideo.us
+ * Copyright 2015 / EnjoyDigital
+ * Copyright 2017 Joel Addison <joel@addison.net.au>
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ */
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -6,24 +21,30 @@
 #include <generated/csr.h>
 #include <generated/mem.h>
 #include <generated/sdram_phy.h>
+#include <hw/flags.h>
 #include <time.h>
 #include <console.h>
-#include <hw/flags.h>
 
 #include "asm.h"
+#include "ci.h"
 #include "config.h"
+#include "edid.h"
+#include "encoder.h"
+#include "fx2.h"
 #include "hdmi_in0.h"
 #include "hdmi_in1.h"
-#include "processor.h"
-#include "pll.h"
-#include "ci.h"
-#include "telnet.h"
-#include "mdio.h"
-#include "encoder.h"
 #include "hdmi_out0.h"
 #include "hdmi_out1.h"
+#include "mdio.h"
+#include "opsis_eeprom.h"
+#include "pll.h"
+#include "processor.h"
 #include "stdio_wrap.h"
+#include "telnet.h"
+#include "tofe_eeprom.h"
 #include "version.h"
+
+#include "ci.h"
 
 int status_enabled;
 int status_short_enabled;
@@ -44,6 +65,10 @@ static void help_video_mode(void)
 	wputs("  video_mode list                - list available video modes");
 	wputs("  m l                            - list available video modes");
 	wputs("  video_mode <mode>              - select video mode");
+	wputs("  video_mode custom <modeline>   - set custom video mode");
+	wputs("  video_mode secondary <mode>    - select secondary video mode");
+	wputs("  video_mode s <mode>            - select secondary video mode");
+	wputs("  video_mode secondary off       - turn off secondary video mode");
 }
 
 static void help_hdp_toggle(void)
@@ -145,7 +170,7 @@ static void ci_help(void)
 static char *readstr(void)
 {
 	char c[2];
-	static char s[64];
+	static char s[128]; // Needs to fit a full mode line ~100 chars.
 	static int ptr = 0;
 
 	if(telnet_active) {
@@ -227,7 +252,14 @@ static char *get_token_generic(char **str, char delimiter)
 
 static char *get_token(char **str)
 {
-	return get_token_generic(str, ' ');
+	char *t;
+	do {
+		t = get_token_generic(str, ' ');
+		if (*t == '\0' && **str == '\0') {
+			break;
+		}
+	} while (*t == '\0');
+	return t;
 }
 
 static void reboot(void)
@@ -239,9 +271,6 @@ static void status_enable(void)
 {
 	wprintf("Enabling status\r\n");
 	status_enabled = 1;
-#ifdef ENCODER_BASE
-	encoder_bandwidth_nbytes_clear_write(1);
-#endif
 }
 
 static void status_disable(void)
@@ -334,11 +363,16 @@ wprintf("\r\n");
 
 static void status_print(void)
 {
+	unsigned int underflows;
 #ifdef CSR_HDMI_IN0_BASE
 	wprintf(
 		"input0:  %dx%d",
 		hdmi_in0_resdetection_hres_read(),
 		hdmi_in0_resdetection_vres_read());
+#ifdef CSR_HDMI_IN0_FREQ_BASE
+	wprintf(" (@" REFRESH_RATE_PRINTF " MHz)",
+		REFRESH_RATE_PRINTF_ARGS(hdmi_in0_freq_value_read() / 10000));
+#endif
 	wprintf("\r\n");
 #endif
 
@@ -347,49 +381,81 @@ static void status_print(void)
 		"input1:  %dx%d",
 		hdmi_in1_resdetection_hres_read(),
 		hdmi_in1_resdetection_vres_read());
+#ifdef CSR_HDMI_IN1_FREQ_BASE
+	wprintf(" (@" REFRESH_RATE_PRINTF " MHz)",
+		REFRESH_RATE_PRINTF_ARGS(hdmi_in1_freq_value_read() / 10000));
+#endif
 	wprintf("\r\n");
 #endif
 
 #ifdef CSR_HDMI_OUT0_BASE
 	wprintf("output0: ");
-	if(hdmi_out0_core_initiator_enable_read())
+	if(hdmi_out0_core_initiator_enable_read()) {
+		hdmi_out0_core_underflow_enable_write(1);
+		hdmi_out0_core_underflow_update_write(1);
+		underflows = hdmi_out0_core_underflow_counter_read();
 		wprintf(
-			"%dx%d@%dHz from %s",
+			"%dx%d@" REFRESH_RATE_PRINTF "Hz from %s (underflows: %d)",
 			processor_h_active,
 			processor_v_active,
-			processor_refresh,
-			processor_get_source_name(processor_hdmi_out0_source));
-	else
+			REFRESH_RATE_PRINTF_ARGS(processor_refresh),
+			processor_get_source_name(processor_hdmi_out0_source),
+			underflows);
+		hdmi_out0_core_underflow_enable_write(0);
+		hdmi_out0_core_underflow_enable_write(1);
+	} else
 		wprintf("off");
 	wprintf("\r\n");
 #endif
 
 #ifdef CSR_HDMI_OUT1_BASE
 	wprintf("output1: ");
-	if(hdmi_out1_core_initiator_enable_read())
+	if(hdmi_out1_core_initiator_enable_read()) {
+		hdmi_out1_core_underflow_enable_write(1);
+		hdmi_out1_core_underflow_update_write(1);
+		underflows = hdmi_out1_core_underflow_counter_read();
 		wprintf(
-			"%dx%d@%uHz from %s",
+			"%dx%d@" REFRESH_RATE_PRINTF "Hz from %s (underflows: %d)",
 			processor_h_active,
 			processor_v_active,
-			processor_refresh,
-			processor_get_source_name(processor_hdmi_out1_source));
-	else
+			REFRESH_RATE_PRINTF_ARGS(processor_refresh),
+			processor_get_source_name(processor_hdmi_out1_source),
+			underflows);
+		hdmi_out1_core_underflow_enable_write(0);
+		hdmi_out1_core_underflow_enable_write(1);
+	} else
 		wprintf("off");
 	wprintf("\r\n");
 #endif
+
+	wprintf("EDID primary mode:   ");
+	wprintf("%dx%d@" REFRESH_RATE_PRINTF "Hz",
+		processor_h_active,
+		processor_v_active,
+		REFRESH_RATE_PRINTF_ARGS(processor_refresh));
+	wprintf("\r\n");
+
+	wprintf("EDID secondary mode: ");
+	if (processor_secondary_mode == EDID_SECONDARY_MODE_OFF) {
+		wprintf("off");
+	}
+	else {
+		char mode_descriptor[PROCESSOR_MODE_DESCLEN];
+		processor_describe_mode(mode_descriptor, processor_secondary_mode);
+		wprintf("%s", mode_descriptor);
+	}
+	wprintf("\r\n");
 
 #ifdef ENCODER_BASE
 	wprintf("encoder: ");
 	if(encoder_enabled) {
 		wprintf(
-			"%dx%d @ %dfps (%dMbps) from %s (q: %d)",
+			"%dx%d @ %dfps from %s (q: %d)",
 			processor_h_active,
 			processor_v_active,
 			encoder_fps,
-			encoder_bandwidth_nbytes_read()*8/1000000,
 			processor_get_source_name(processor_encoder_source),
 			encoder_quality);
-		encoder_bandwidth_nbytes_clear_write(1);
 	} else
 		wprintf("off");
 	wprintf("\r\n");
@@ -502,13 +568,167 @@ static void video_mode_list(void)
 
 static void video_mode_set(int mode)
 {
-	char mode_descriptors[PROCESSOR_MODE_COUNT*PROCESSOR_MODE_DESCLEN];
+	char mode_descriptor[PROCESSOR_MODE_DESCLEN];
 	if(mode < PROCESSOR_MODE_COUNT) {
-		processor_list_modes(mode_descriptors);
-		wprintf("Setting video mode to %s\r\n", &mode_descriptors[mode*PROCESSOR_MODE_DESCLEN]);
-		config_set(CONFIG_KEY_RESOLUTION, mode);
+		processor_describe_mode(mode_descriptor, mode);
+		wprintf("Setting video mode to %s\r\n", mode_descriptor);
+		config_set(CONFIG_KEY_RES_PRIMARY, mode);
 		processor_start(mode);
 	}
+}
+
+static void video_mode_secondary(char *str)
+{
+	char *token;
+	if((token = get_token(&str)) == '\0') return;
+
+	if(strcmp(token, "off") == 0) {
+		wprintf("Turning off secondary video mode\r\n");
+		processor_set_secondary_mode(EDID_SECONDARY_MODE_OFF);
+	}
+	else {
+		int mode = atoi(token);
+		char mode_descriptor[PROCESSOR_MODE_DESCLEN];
+		if (mode < PROCESSOR_MODE_COUNT) {
+			processor_describe_mode(mode_descriptor, mode);
+			wprintf("Setting secondary video mode to %s\r\n", mode_descriptor);
+			config_set(CONFIG_KEY_RES_SECONDARY, mode);
+			processor_set_secondary_mode(mode);
+		}
+	}
+}
+
+#define NEXT_TOKEN_OR_RETURN(s, t)				\
+	if(!(t = get_token(&s))) {				\
+		wprintf("Parse failed - invalid mode.\r\n");	\
+		return;						\
+	}
+
+static void video_mode_custom(char* str)
+{
+	wprintf("Parsing custom mode...\r\n");
+
+	char* token;
+	// Modeline "String description" Dot-Clock HDisp HSyncStart HSyncEnd HTotal VDisp VSyncStart VSyncEnd VTotal [options]
+	// $ xrandr --newmode "1280x1024_60.00"  109.00  1280 1368 1496 1712  1024 1027 1034 1063 -hsync +vsync
+
+	// Based on code from http://cgit.freedesktop.org/xorg/app/xrandr/tree/xrandr.c#n3101
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	char* dotClockInt = get_token_generic(&token, '.');
+	char* dotClockDec = get_token(&token);
+	if (!dotClockInt || !dotClockDec) return;
+	unsigned int dotClock = (atoi(dotClockInt) * 100) + atoi(dotClockDec);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int width = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int hSyncStart = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int hSyncEnd = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int hTotal = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int height = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int vSyncStart = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int vSyncEnd = atoi(token);
+
+	NEXT_TOKEN_OR_RETURN(str, token);
+	unsigned int vTotal = atoi(token);
+
+	unsigned int modeFlags = EDID_DIGITAL; // Always Digital Separate
+	while (*str != '\0') {
+		token = get_token(&str);
+		if (*token == '\0' && *str == '\0') break;
+
+		int f;
+
+		for (f = 0; timing_mode_flags[f].string; f++)
+			if (strcasecmp(timing_mode_flags[f].string, token) == 0)
+				break;
+
+		if (!timing_mode_flags[f].string) {
+			if (*token != '\0') {
+				wprintf("Skipping flag: %s\r\n", token);
+				continue;
+			}
+			break;
+		}
+
+		modeFlags |= timing_mode_flags[f].flag;
+	}
+
+	/*
+	 -------------------> Time ------------->
+
+	                  +-------------------+
+	   Video          |  Blanking         |  Video
+                      |                   |
+	 ----(a)--------->|<-------(b)------->|
+	                  |                   |
+	                  |       +-------+   |
+	                  |       | Sync  |   |
+	                  |       |       |   |
+	                  |<-(c)->|<-(d)->|   |
+	                  |       |       |   |
+	 ----(1)--------->|       |       |   |
+	 ----(2)----------------->|       |   |
+	 ----(3)------------------------->|   |
+	 ----(4)----------------------------->|
+	                  |       |       |   |
+	 -----------------\                   /--------
+	                  |                   |
+	                  \-------\       /---/
+	                          |       |
+	                          \-------/
+
+	 (a) - h_active
+	 (b) - h_blanking
+	 (c) - h_sync_offset
+	 (d) - h_sync_width
+	 (1) - HDisp / width
+	 (2) - HSyncStart
+	 (3) - HSyncEnd
+	 (4) - HTotal
+	*/
+
+	if (hTotal <= hSyncEnd || hSyncEnd <= hSyncStart ||
+			hSyncStart <= width || vTotal <= vSyncEnd ||
+			vSyncEnd <= vSyncStart || vSyncStart <= height) {
+		wprintf("Failed to set custom mode - values out of range.\r\n");
+	}
+
+	struct video_timing* mode = processor_get_custom_mode();
+
+	// 640x480 @ 75Hz (VESA) hsync: 37.5kHz
+	// Modeline "String des" Dot-Clock HDisp HSyncStart HSyncEnd HTotal VDisp VSyncStart VSyncEnd VTotal [options]
+	// ModeLine "640x480"    31.5  640  656  720  840    480  481  484  500
+	//                                16   64  <200         1    3   <20
+
+	mode->pixel_clock = dotClock;
+
+	mode->h_active = width;
+	mode->h_blanking = hTotal - width;
+	mode->h_sync_offset = hSyncStart - hTotal;
+	mode->h_sync_width = hSyncEnd - hSyncStart;
+
+	mode->v_active = height;
+	mode->v_blanking = vTotal - height;
+	mode->v_sync_offset = vSyncStart - height;
+	mode->v_sync_width = vSyncEnd - vSyncStart;
+
+	mode->flags = modeFlags;
+
+	processor_set_custom_mode();
+	wprintf("Custom video mode set.\r\n");
 }
 
 static void hdp_toggle(int source)
@@ -518,7 +738,7 @@ static void hdp_toggle(int source)
 #endif
 	wprintf("Toggling HDP on output%d\r\n", source);
 #ifdef CSR_HDMI_IN0_BASE
-	if(source ==  VIDEO_IN_HDMI_IN0) {
+	if(source == VIDEO_IN_HDMI_IN0) {
 		hdmi_in0_edid_hpd_en_write(0);
 		for(i=0; i<65536; i++);
 		hdmi_in0_edid_hpd_en_write(1);
@@ -639,7 +859,7 @@ void ci_service(void)
 
 	token = get_token(&str);
 
-    if(strcmp(token, "help") == 0) {
+	if(strcmp(token, "help") == 0) {
 		wputs("Available commands:");
 		token = get_token(&str);
 		if(strcmp(token, "video_matrix") == 0)
@@ -724,6 +944,10 @@ void ci_service(void)
 		token = get_token(&str);
 		if((strcmp(token, "list") == 0) || (strcmp(token, "l") == 0))
 			video_mode_list();
+		else if(strcmp(token, "custom") == 0)
+			video_mode_custom(str);
+		else if((strcmp(token, "secondary") == 0) || (strcmp(token, "s") == 0))
+			video_mode_secondary(str);
 		else
 			video_mode_set(atoi(token));
 	}
@@ -808,16 +1032,16 @@ void ci_service(void)
 			wprintf("\r\n");
 		}
 #endif
-#ifdef CSR_DNA_ID_ADDR
+#ifdef CSR_INFO_DNA_ID_ADDR
 		else if(strcmp(token, "dna") == 0)
 			print_board_dna();
 #endif
-#ifdef CSR_OPSIS_EEPROM_I2C_W_ADDR
+#ifdef CSR_INFO_OPSIS_EEPROM_W_ADDR
 		else if(strcmp(token, "opsis_eeprom") == 0) {
 			opsis_eeprom_dump();
 		}
 #endif
-#ifdef CSR_TOFE_EEPROM_I2C_W_ADDR
+#ifdef CSR_TOFE_I2C_W_ADDR
 		else if(strcmp(token, "tofe_eeprom") == 0) {
 			tofe_eeprom_dump();
 		}
