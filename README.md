@@ -233,7 +233,7 @@ this step.
 
 Load the gateware and firmware - see [1] if using a VM:
 ```
-make load-gateware
+make gateware-load
 ```
 
 On the Opsis, while loading the Blue LED (D1 / Done) and Green LED (D2) will
