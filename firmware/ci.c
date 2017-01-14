@@ -296,7 +296,7 @@ static void debug_ddr(void);
 
 static void status_short_print(void)
 {
-    wprintf("status1: ");
+	wprintf("status1: ");
 	unsigned int underflows;
 #ifdef CSR_HDMI_IN0_BASE
 	wprintf(
@@ -358,7 +358,7 @@ static void status_short_print(void)
 		wprintf("off ");
 #endif
 
-    wprintf("\r\nstatus2: ");
+	wprintf("\r\nstatus2: ");
 	wprintf("EDID: ");
 	wprintf("%dx%d@" REFRESH_RATE_PRINTF "Hz/",
 		processor_h_active,
@@ -391,7 +391,7 @@ static void status_short_print(void)
 	wprintf("ddr: ");
 	debug_ddr();
 #endif
-    wprintf("\r\n");
+	wprintf("\r\n");
 }
 
 static void status_print(void)
