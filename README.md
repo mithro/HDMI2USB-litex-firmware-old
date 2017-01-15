@@ -1,12 +1,10 @@
-For project description and information see the project [README.md](/) file.
-
 # Building HDMI2USB-litex-firmware on Ubuntu 14.04 LTS
 
-These scripts are designed to bootstrap a firmware build environment on Ubuntu
-14.04 LTS and also works on 16.04 though with less testing.  This is only
-required if you wish to make changes to the firmware.
-For using a HDMI2USB board, prebuilt versions of the firmware
-are available in the
+The scripts in the `scripts` directory are designed to bootstrap a firmware
+build environment on Ubuntu 14.04 LTS and also works on 16.04 though with
+less testing.  This is only required if you wish to make changes to the
+firmware.  For using a HDMI2USB board, prebuilt versions of the firmware are
+available in the
 [HDMI2USB-firmware-prebuilt](http://github.com/timvideos/HDMI2USB-firmware-prebuilt)
 repository.
 
@@ -235,7 +233,7 @@ this step.
 
 Load the gateware and firmware - see [1] if using a VM:
 ```
-make load-gateware
+make gateware-load
 ```
 
 On the Opsis, while loading the Blue LED (D1 / Done) and Green LED (D2) will
@@ -252,8 +250,10 @@ loaded file build/opsis_hdmi2usb-hdmi2usbsoc-opsis.bit to pld device 0 in 31s 98
 
 Load fx2 firmware to enable USB capture:
 ```
-make load-fx2
+make firmware-load
 ```
+
+Then at the `BIOS>` prompt, enter `serialboot`.
 
 ### Common Errors
 
