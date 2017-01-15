@@ -50,7 +50,7 @@
 
 int status_enabled;
 int status_short_enabled;
-int blank_command_counter = 0;  // increments per command, used to detect 2x blank commands
+int blank_command_counter = 0;
 
 static void help_video_matrix(void)
 {
