@@ -50,6 +50,7 @@
 
 int status_enabled;
 int status_short_enabled;
+int blank_command_counter = 0;  // increments per command, used to detect 2x blank commands
 
 static void help_video_matrix(void)
 {
@@ -139,10 +140,10 @@ static void help_debug(void)
     wputs("debug commands (alias 'd')");
 	wputs("  debug pll                      - dump pll configuration");
 #ifdef CSR_HDMI_IN0_BASE
-    wputs("  debug input0 <on/off>          - debug dvisampler0");
+    wputs("  debug input0 <on/off>          - debug dvisampler0. on/off prints repeatedly");
 #endif
 #ifdef CSR_HDMI_IN1_BASE
-    wputs("  debug input1 <on/off>          - debug dvisampler1");
+    wputs("  debug input1 <on/off>          - debug dvisampler1. on/off prints repeatedly");
 #endif
 #ifdef CSR_SDRAM_CONTROLLER_BANDWIDTH_UPDATE_ADDR
 	wputs("  debug ddr                      - show DDR bandwidth");
@@ -959,6 +960,24 @@ void ci_service(void)
 
 	token = get_token(&str);
 
+	if(strcmp(token, "") == 0) {
+		if(blank_command_counter == 1) {
+			wprintf("Disabling all repeating messages\r\n");
+			status_enabled = 0;
+			status_short_enabled = 0;
+			hdmi_in0_debug = 0;
+			hdmi_in1_debug = 0;
+			blank_command_counter = 0;
+		} else {
+			if(status_enabled || status_short_enabled | hdmi_in0_debug || hdmi_in1_debug) {
+				wprintf("Press ENTER again to disable repeating messages\r\n");
+				blank_command_counter = 1;
+			}
+		}
+	} else {
+		blank_command_counter = 0;
+	}
+
 	if(strcmp(token, "help") == 0) {
 		wputs("Available commands:");
 		token = get_token(&str);
@@ -1240,11 +1259,7 @@ void ci_service(void)
 		} else
 			help_debug();
 
-	} else if(strcmp(token, "version") == 0) {
+	} else if(strcmp(token, "version") == 0)
 		print_version();
-	} else {
-		if(status_enabled)
-			status_disable();
-	}
 	ci_prompt();
 }
