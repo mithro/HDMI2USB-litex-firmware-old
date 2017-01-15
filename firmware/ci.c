@@ -50,7 +50,7 @@
 
 int status_enabled;
 int status_short_enabled;
-int blank_command_counter = 0;
+int blank_command_counter = 2;
 
 static void help_video_matrix(void)
 {
@@ -961,21 +961,21 @@ void ci_service(void)
 	token = get_token(&str);
 
 	if(strcmp(token, "") == 0) {
-		if(blank_command_counter == 1) {
+		if(blank_command_counter == 0) {
 			wprintf("Disabling all repeating messages\r\n");
 			status_enabled = 0;
 			status_short_enabled = 0;
 			hdmi_in0_debug = 0;
 			hdmi_in1_debug = 0;
-			blank_command_counter = 0;
+			blank_command_counter = 2;
 		} else {
 			if(status_enabled || status_short_enabled | hdmi_in0_debug || hdmi_in1_debug) {
-				wprintf("Press ENTER again to disable repeating messages\r\n");
-				blank_command_counter = 1;
+				wprintf("Press ENTER %d more times to disable repeating messages\r\n", blank_command_counter);
+				blank_command_counter--;
 			}
 		}
 	} else {
-		blank_command_counter = 0;
+		blank_command_counter = 2;
 	}
 
 	if(strcmp(token, "help") == 0) {
